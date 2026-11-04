@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rahbar-config
+  namespace: rahbar
+data:
+  EMBED_MODEL: "nomic-embed-text"
+  CHUNK_SIZE: "500"
+  OVERLAP: "50"
+  TOP_K: "3"
+  RELEVANCE_FLOOR: "0.5"
+  CACHE_THRESHOLD: "0.85"
+  TEMPERATURE: "0.1"
+  LLM_PROVIDER: "stub"
+  CHROMA_HOST: "chroma"
