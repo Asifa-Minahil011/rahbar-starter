@@ -78,11 +78,3 @@ app.include_router(ask.router)
 _ui_dir = os.environ.get("SERVE_UI_DIR")
 if _ui_dir:
     app.mount("/", StaticFiles(directory=_ui_dir, html=True), name="ui")
-
-@app.get("/healthz")
-async def healthz():
-    return {"status": "ok"}
-
-@app.get("/readyz")
-async def readyz():
-    return {"status": "ready"}
