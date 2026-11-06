@@ -4,12 +4,21 @@ metadata:
   name: rahbar-config
   namespace: rahbar
 data:
-  EMBED_MODEL: "nomic-embed-text"
-  CHUNK_SIZE: "500"
-  OVERLAP: "50"
-  TOP_K: "3"
-  RELEVANCE_FLOOR: "0.5"
-  CACHE_THRESHOLD: "0.85"
-  TEMPERATURE: "0.1"
+  # The embedding pin: api and indexer both read this one key (section 4.4).
+  # The dummy index records dummy-768; switch to nomic-embed-text with the real pipeline.
+  EMBED_MODEL: "dummy-768"
+  RETRIEVER: "stub"
   LLM_PROVIDER: "stub"
   CHROMA_HOST: "chroma"
+  CHROMA_PORT: "8000"
+  CHROMA_COLLECTION: "rahbar"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  CHUNK_SIZE: "400"
+  CHUNK_OVERLAP: "50"
+  TOP_K: "5"
+  RELEVANCE_FLOOR: "0.5"
+  CACHE_THRESHOLD: "0.85"
+  # Facts and JSON belong at 0 to 0.3: low temperature keeps answers close to the evidence.
+  TEMPERATURE: "0.2"
+  OLLAMA_URL: "http://host.minikube.internal:11434"
