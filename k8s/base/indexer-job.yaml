@@ -11,7 +11,7 @@ metadata:
   name: indexer
   namespace: rahbar
 spec:
-  backoffLimit: 3
+  backoffLimit: 6
   template:
     metadata:
       labels:
