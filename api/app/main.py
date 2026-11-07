@@ -32,9 +32,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.settings = settings
     app.state.retriever = get_retriever(settings)
     app.state.provider = get_provider(settings)
-    # STARTER-TODO(4.4): compare the collection's embedding-model metadata with
-    # settings.embed_model here, and make /readyz fail on a mismatch.
-    # This process only reads the index. The indexer Job writes it.
+    # The embedding pin (section 4.4): compare the index's model with ours and say so
+    # in the log. /readyz re-checks on every probe, so a mismatch keeps this pod out of
+    # the Service. This process only reads the index. The indexer Job writes it.
+    pin_status, pin_detail = health.check_embedding_pin(settings)
+    log.log(
+        logging.ERROR if pin_status == "mismatch" else logging.INFO,
+        "embedding pin check",
+        extra={"pin_status": pin_status, "pin_detail": pin_detail},
+    )
     log.info(
         "api started",
         extra={"retriever": settings.retriever, "llm_provider": settings.llm_provider,
