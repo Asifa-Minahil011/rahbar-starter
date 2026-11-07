@@ -6,6 +6,8 @@ resources:
   - configmap.yaml
   - redis.yaml
   - chroma.yaml
+  - indexer-job.yaml
+  - reindex-cronjob.yaml
   - api.yaml
   - ui.yaml
   - ingress.yaml
