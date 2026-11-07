@@ -12,3 +12,4 @@ resources:
   - ui.yaml
   - ingress.yaml
   - hpa.yaml
+  - networkpolicy.yaml
