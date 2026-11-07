@@ -1,10 +1,17 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: chroma
+  namespace: rahbar
+automountServiceAccountToken: false
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: chroma
   namespace: rahbar
 spec:
-  serviceName: "chroma"
+  serviceName: chroma
   replicas: 1
   selector:
     matchLabels:
@@ -14,20 +21,68 @@ spec:
       labels:
         app: chroma
     spec:
+      serviceAccountName: chroma
+      automountServiceAccountToken: false
       enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
       - name: chroma
-        image: chromadb/chroma:latest
+        image: chromadb/chroma:1.0.12
         ports:
         - containerPort: 8000
+        env:
+        - name: IS_PERSISTENT
+          value: "TRUE"
+        - name: PERSIST_DIRECTORY
+          value: /data
+        - name: ANONYMIZED_TELEMETRY
+          value: "FALSE"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
         volumeMounts:
         - name: chroma-data
-          mountPath: /chroma/chroma
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "768Mi"
+        startupProbe:
+          httpGet:
+            path: /api/v2/heartbeat
+            port: 8000
+          failureThreshold: 30
+          periodSeconds: 2
+        readinessProbe:
+          httpGet:
+            path: /api/v2/heartbeat
+            port: 8000
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/v2/heartbeat
+            port: 8000
+          periodSeconds: 20
+          failureThreshold: 3
+      volumes:
+      - name: tmp
+        emptyDir: {}
   volumeClaimTemplates:
   - metadata:
       name: chroma-data
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes: ["ReadWriteOnce"]
       resources:
         requests:
           storage: 2Gi
@@ -38,7 +93,9 @@ metadata:
   name: chroma
   namespace: rahbar
 spec:
+  type: ClusterIP
   selector:
     app: chroma
   ports:
   - port: 8000
+    targetPort: 8000

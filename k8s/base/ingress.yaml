@@ -3,11 +3,11 @@ kind: Ingress
 metadata:
   name: rahbar-ingress
   namespace: rahbar
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
+  ingressClassName: nginx
   rules:
-  - http:
+  - host: rahbar.local
+    http:
       paths:
       - path: /api
         pathType: Prefix
