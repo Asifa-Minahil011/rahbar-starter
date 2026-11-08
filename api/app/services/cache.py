@@ -28,6 +28,7 @@ from collections.abc import Callable
 from itertools import islice
 from typing import Any
 
+from ..retrieval.chroma import OLDER, YEAR, exact_terms
 from ..schemas import AskResponse
 
 log = logging.getLogger("rahbar.cache")
@@ -42,6 +43,16 @@ def _unit(vector: list[float]) -> list[float]:
     return [x / norm for x in vector]
 
 
+def signature(question: str) -> tuple[str, ...]:
+    """What a question names exactly: clause numbers, course codes, years, and whether it asks about an
+    older edition. Two questions may share a cache entry only if these agree: embeddings put clause 4.23
+    and clause 4.24 almost on top of each other (cosine 0.95), but their answers differ."""
+    terms = set(exact_terms(question)) | set(YEAR.findall(question))
+    if OLDER.search(question):
+        terms.add("<older>")
+    return tuple(sorted(terms))
+
+
 def cosine(a: list[float], b: list[float]) -> float:
     """Cosine similarity of two UNIT vectors."""
     return sum(x * y for x, y in zip(a, b))
@@ -49,7 +60,9 @@ def cosine(a: list[float], b: list[float]) -> float:
 
 class RedisSemanticCache:
     def __init__(self, redis_client: Any, embed: Callable[[str], list[float]],
-                 index_id: Callable[[], str | None], threshold: float, ttl: int = 86400) -> None:
+                 index_id: Callable[[], str | None], threshold: float, ttl: int = 86400,
+                 exact_guard: bool = True) -> None:
+        self.exact_guard = exact_guard
         self.r = redis_client
         self.embed = embed
         self.index_id = index_id
@@ -62,6 +75,7 @@ class RedisSemanticCache:
             if not idx:
                 return None
             vec = _unit(self.embed(question))
+            sig = signature(question)
             keys = list(islice(self.r.scan_iter(match=f"{PREFIX}:{idx}:*", count=200), MAX_SCAN))
             if not keys:
                 return None
@@ -70,6 +84,8 @@ class RedisSemanticCache:
                 if raw is None:
                     continue
                 item = json.loads(raw)
+                if self.exact_guard and signature(item["question"]) != sig:
+                    continue                      # same topic, different clause/code/year: not the same question
                 sim = cosine(vec, item["vector"])
                 if sim > best_sim:
                     best_sim, best = sim, item

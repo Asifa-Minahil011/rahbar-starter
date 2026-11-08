@@ -150,32 +150,52 @@ def main() -> int:
     os.environ.setdefault("EMBED_MODEL", "nomic-embed-text")
     note("start")
     floor = float(os.environ.get("RELEVANCE_FLOOR", "0.5"))
-    try:
-        if "wait" not in skip:
-            step_wait(args)
-        if "floor" not in skip:
-            floor = step_floor(args)
-        os.environ["RELEVANCE_FLOOR"] = str(floor)
-        if "eval" not in skip:
-            step_eval(args, floor)
-        if "cache" not in skip:
+    failed: list[str] = []
+
+    def guard(name: str, fn: Any) -> Any:
+        """One step failing must not stop the others: note it and carry on."""
+        try:
+            return fn()
+        except Exception as exc:
+            failed.append(name)
+            note(f"STEP '{name}' FAILED: {exc!r} (continuing with the next step)")
+            return None
+
+    if "wait" not in skip:
+        guard("wait", lambda: step_wait(args))
+    if "floor" not in skip:
+        picked = guard("floor", lambda: step_floor(args))
+        floor = picked if picked is not None else floor
+        if picked is None:
+            note(f"floor step failed: using RELEVANCE_FLOOR={floor} for the rest")
+    os.environ["RELEVANCE_FLOOR"] = str(floor)
+    if "eval" not in skip:
+        guard("eval", lambda: step_eval(args, floor))
+    if "cache" not in skip:
+        def cache_step() -> None:
             code = run([sys.executable, "scripts/cache_threshold.py"], "cache")
             note(f"cache threshold (exit {code}):\n{tail('cache', 30)}")
-        if "ce" not in skip:
+        guard("cache", cache_step)
+    if "ce" not in skip:
+        def ce_step() -> None:
             code = run([sys.executable, "scripts/failure_experiments.py", "--stages", "C,E",
                         "--golden", args.golden, "--out", "eval/failure-CE.json"], "failure_ce")
             note(f"failure experiments C and E (exit {code}):\n{tail('failure_ce', 30)}")
-        if "b" not in skip:
+        guard("ce", ce_step)
+    if "b" not in skip:
+        def b_step() -> None:
             code = run([sys.executable, "scripts/tune_chunking.py", "--configs", "100:0", "--golden", args.golden,
                         "--out", "eval/tuning-b.json"], "stage_b")
             note(f"stage B, 100-word chunks without overlap (exit {code}):\n{tail('stage_b', 8)}")
-        if "f" not in skip:
+        guard("b", b_step)
+    if "f" not in skip:
+        def f_step() -> None:
             code = run([sys.executable, "scripts/failure_experiments.py", "--stages", "F", "--golden", args.golden,
                         "--baseline-full", "eval/results.json", "--out", "eval/failure-F.json"], "failure_f")
             note(f"failure experiment F (exit {code}):\n{tail('failure_f', 30)}")
-    except Exception as exc:   # report and still exit cleanly: partial results are useful
-        note(f"STOPPED by an error: {exc!r}")
-        return 1
+        guard("f", f_step)
+    if failed:
+        note("steps that failed: " + ", ".join(failed))
     note("ALL DONE")
     return 0
 

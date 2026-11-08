@@ -76,7 +76,9 @@ def parse_cache(text: str) -> dict[str, Any]:
             for m in re.finditer(r"^\| (\d\.\d+) \| (\d+) \| (\d+)(?:: (.*?))? \|$", text, re.M)]
     head = re.search(r"True hits \(of (\d+) paraphrases\) \| False hits \(of (\d+) near-misses\)", text)
     hi = re.search(r"highest near-miss\s*:\s*([\d.]+)", text)
-    return {"rows": rows, "same": int(head.group(1)) if head else None,
+    raw = re.search(r"highest near-miss without the guard\s*:\s*([\d.]+)", text)
+    blocked = re.findall(r"^blocked by the exact-term guard at any threshold \(cosine ([\d.]+)\): (.*)$", text, re.M)
+    return {"raw_highest": float(raw.group(1)) if raw else None, "blocked": blocked, "rows": rows, "same": int(head.group(1)) if head else None,
             "different": int(head.group(2)) if head else None, "highest": float(hi.group(1)) if hi else None}
 
 
@@ -105,6 +107,12 @@ def cache_section(text: str) -> tuple[str, str]:
             body.append(f"The false hit that ruled out {ruled[0]:.2f}: {ruled[3] or 'see the table'}. "
                         f"A cached answer for that pair would be served to the wrong question.")
         value = f"{shipped:.2f}"
+    if c.get("blocked"):
+        cos_, pair = c["blocked"][0]
+        body += ["", f"Pure cosine cannot separate near-misses: {pair} reached cosine {cos_}, as similar as a paraphrase, "
+                 "yet the answers differ. So the cache also requires both questions to name the same clause numbers, "
+                 "course codes and years (`signature` in `api/app/services/cache.py`); such pairs never hit, at any "
+                 "threshold. The table above counts only the pairs the guard lets through."]
     body += ["", "Never cached: abstentions, fallbacks, answers without a valid citation, follow-ups. Every key "
              "contains the index's `index_id`, so a re-index invalidates the cache (`api/app/services/cache.py`)."]
     return "\n".join(body), value

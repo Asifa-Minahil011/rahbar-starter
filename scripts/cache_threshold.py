@@ -29,6 +29,7 @@ sys.path.insert(0, str(ROOT / "api"))
 
 from app.config import Settings  # noqa: E402
 from app.retrieval.embedding import embed_query  # noqa: E402
+from app.services.cache import signature  # noqa: E402
 
 
 def cos(a: list[float], b: list[float]) -> float:
@@ -37,6 +38,7 @@ def cos(a: list[float], b: list[float]) -> float:
 
 
 def report(same: list[float], different: list[tuple[float, str]], thresholds: list[float]) -> list[str]:
+    """`same` and `different` hold only the pairs the exact-term guard lets through (see main)."""
     lines = ["| Threshold | True hits (of %d paraphrases) | False hits (of %d near-misses) |"
              % (len(same), len(different)), "| --- | --- | --- |"]
     for t in thresholds:
@@ -63,11 +65,18 @@ def main() -> int:
             cache[q] = embed_query(q, settings)
         return cache[q]
 
-    same = [cos(vec(a), vec(b)) for a, b in data["same"]]
-    different = [(cos(vec(a), vec(b)), f"{a!r} vs {b!r}") for a, b in data["different"]]
+    same_all = [(cos(vec(a), vec(b)), signature(a) == signature(b)) for a, b in data["same"]]
+    diff_all = [(cos(vec(a), vec(b)), signature(a) == signature(b), f"{a!r} vs {b!r}") for a, b in data["different"]]
+    # the cache only compares questions whose exact terms (clauses, codes, years) agree
+    same = [s for s, ok in same_all if ok]
+    different = [(s, label) for s, ok, label in diff_all if ok]
+    blocked = [(s, label) for s, ok, label in diff_all if not ok]
     print("similarity of paraphrases     :", " ".join(f"{s:.3f}" for s in same))
-    print("similarity of near-misses     :", " ".join(f"{s:.3f}" for s, _ in different))
-    print("highest near-miss             :", f"{max(s for s, _ in different):.3f}")
+    print("similarity of near-misses     :", " ".join(f"{s:.3f}" for s, _ in different) or "(none pass the guard)")
+    print("highest near-miss             :", f"{max((s for s, _ in different), default=0.0):.3f}")
+    print("highest near-miss without the guard :", f"{max(s for s, _, _ in diff_all):.3f}")
+    for s, label in blocked:
+        print(f"blocked by the exact-term guard at any threshold (cosine {s:.3f}): {label}")
     print()
     print("\n".join(report(same, different, [float(x) for x in args.thresholds.split(",")])))
     print("\nShip the lowest threshold with 0 false hits, and name the false hit that ruled out "

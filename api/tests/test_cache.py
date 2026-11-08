@@ -51,10 +51,26 @@ def test_paraphrase_hits_and_near_miss_does_not() -> None:
     assert cache.lookup("What does clause 4.24 say") is None                # false hit avoided
 
 
-def test_a_lower_threshold_would_return_the_wrong_clause() -> None:
-    cache, _ = make(["i1"], threshold=0.9)       # the mistake the threshold report is about
+def test_a_lower_threshold_without_the_guard_returns_the_wrong_clause() -> None:
+    cache, _ = make(["i1"], threshold=0.9)
+    cache.exact_guard = False                    # what pure cosine does: the mistake the threshold report is about
     cache.store("What does clause 4.23 say", reply())
     assert cache.lookup("What does clause 4.24 say") is not None
+
+
+def test_the_exact_term_guard_blocks_a_near_miss_even_at_a_low_threshold() -> None:
+    cache, _ = make(["i1"], threshold=0.9)
+    cache.store("What does clause 4.23 say", reply())
+    assert cache.lookup("What does clause 4.24 say") is None
+    assert cache.lookup("What does clause 4.23 say") is not None
+
+
+def test_signature_separates_clauses_years_and_older_editions() -> None:
+    from app.services.cache import signature
+    assert signature("what does clause 4.23 say") != signature("what does clause 4.24 say")
+    assert signature("attendance rule in 2023") != signature("attendance rule")
+    assert signature("the previous attendance rule") != signature("the attendance rule")
+    assert signature("How many courses can I repeat?") == signature("How many courses may a student repeat")
 
 
 def test_reindex_invalidates_everything() -> None:
