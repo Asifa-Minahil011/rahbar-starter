@@ -7,7 +7,9 @@ Rules (reported in docs/PIPELINE.md):
 2. Drop lone page-number lines at the top or bottom of a page.
 3. Re-join lines that the PDF wrapped mid-sentence, and undo "exam-\\nination" hyphenation.
 4. Drop OCR junk lines (no letters or digits at all, or a single stray character).
-5. Collapse runs of spaces; end each page with paragraphs separated by one blank line.
+5. Drop table-of-contents lines (runs of dots, "Attendance.......12"): they repeat every
+   heading in the document, so they match almost any query and answer none.
+6. Collapse runs of spaces; end each page with paragraphs separated by one blank line.
 
 Deliberately NOT stripped: clause numbers ("1.21"), heading lines and table-row lines
 ("| Header: value |"). Exact-term questions and citations depend on them.
@@ -21,6 +23,7 @@ from collections import Counter
 from .models import Document
 from .structure import heading_text, starts_new_block
 
+DOT_LEADER = re.compile(r"[.\u2026\u00b7_]{4,}")   # table-of-contents leaders: "Attendance......12"
 PAGE_NUMBER = re.compile(r"^(page\s*)?\d{1,3}(\s*(of|/)\s*\d{1,3})?$", re.I)
 EDGE = 3
 REPEAT_SHARE = 0.4
@@ -30,7 +33,7 @@ def _norm(line: str) -> str:
     """Key for repeat detection: page counters and a leading/trailing bare number are
     ignored, but digits inside clause numbers ("5.4") are kept, so two different
     headings never look like one repeated header."""
-    t = re.sub(r"\s+", " ", line.strip().lower())
+    t = re.sub(r"\s+", " ", line.replace("|", " ").strip().lower())   # pdfplumber renders some footers as tables
     t = re.sub(r"\bpage\s*\d+(\s*(of|/)\s*\d+)?\b", "", t)
     t = re.sub(r"^\d+\s+|\s*[|\-\u2013]?\s*\d+$", "", t)
     return t.strip()
@@ -87,6 +90,8 @@ def clean(doc: Document) -> Document:
             if i in edge_idx and (_norm(line) in repeats or PAGE_NUMBER.match(stripped)):
                 continue
             if stripped and not re.search(r"[A-Za-z0-9]", stripped):
+                continue
+            if DOT_LEADER.search(stripped):
                 continue
             if page.ocr and len(stripped) == 1:
                 continue

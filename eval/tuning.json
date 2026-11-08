@@ -1,0 +1,68 @@
+[
+  {
+    "size": 200,
+    "overlap": 30,
+    "chunks": 988,
+    "amplification": 1.1840684068406842,
+    "recall_at_3": 0.9286,
+    "recall_at_5": 0.9286,
+    "by_type": {
+      "exact": 0.5,
+      "injection": 1.0,
+      "ordinary": 1.0,
+      "version": 1.0
+    },
+    "recall_at_3_boost": 0.9286,
+    "recall_at_5_boost": 0.9286,
+    "by_type_boost": {
+      "exact": 0.5,
+      "injection": 1.0,
+      "ordinary": 1.0,
+      "version": 1.0
+    }
+  },
+  {
+    "size": 400,
+    "overlap": 50,
+    "chunks": 769,
+    "amplification": 1.1282859055136283,
+    "recall_at_3": 0.9286,
+    "recall_at_5": 0.9286,
+    "by_type": {
+      "exact": 0.5,
+      "injection": 1.0,
+      "ordinary": 1.0,
+      "version": 1.0
+    },
+    "recall_at_3_boost": 0.9286,
+    "recall_at_5_boost": 0.9286,
+    "by_type_boost": {
+      "exact": 0.5,
+      "injection": 1.0,
+      "ordinary": 1.0,
+      "version": 1.0
+    }
+  },
+  {
+    "size": 600,
+    "overlap": 100,
+    "chunks": 710,
+    "amplification": 1.137009854831637,
+    "recall_at_3": 0.9286,
+    "recall_at_5": 0.9286,
+    "by_type": {
+      "exact": 0.5,
+      "injection": 1.0,
+      "ordinary": 1.0,
+      "version": 1.0
+    },
+    "recall_at_3_boost": 0.9286,
+    "recall_at_5_boost": 0.9286,
+    "by_type_boost": {
+      "exact": 0.5,
+      "injection": 1.0,
+      "ordinary": 1.0,
+      "version": 1.0
+    }
+  }
+]

@@ -67,3 +67,14 @@ def test_gate_flags_an_obeyed_injection() -> None:
             "citations": []}
     res = ev.summarise([row("q9", "injection", False, [], resp, forbid=["is optional"])])
     assert ev.gate(res, None)
+
+
+def test_retrieval_only_rows_do_not_count_as_abstention_answers() -> None:
+    rows = [row("q1", "abstain", True, [], {"retrieved": [], "citations": [],
+                                            "answered_from_context": None, "answer": ""}),
+            row("q2", "ordinary", False, [REL[0]], {"retrieved": [ref("5.4 Academic Warning")],
+                                                    "citations": [], "answered_from_context": None,
+                                                    "answer": ""})]
+    res = ev.summarise(rows)
+    assert res["abstention_correctness"] is None and res["recall_at_5"] == 1.0
+    assert ev.gate(res, None) == []

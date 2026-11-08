@@ -198,3 +198,23 @@ def test_exact_terms_get_a_rank_bonus_but_keep_their_similarity() -> None:
     out = r.retrieve("what does clause 1.21 say?", 2)
     # "b" mentions 1.21 in its text: it overtakes "a" (0.70) despite lower similarity (0.55)
     assert [p.chunk_id for p in out] == ["b", "a"] and out[0].score == pytest.approx(0.55)
+
+
+def test_superseded_filter_can_be_switched_off_for_fault_injection() -> None:
+    chroma = FakeChroma()
+    r = ChromaRetriever(Settings(superseded_filter=False), client=chroma, embed=lambda q: [0.0])
+    r.retrieve("what is the attendance rule?", 2)
+    assert chroma.col.last_where is None          # stage E of FAILURE-ANALYSIS
+
+
+def test_retrieve_route_returns_refs_without_calling_the_model(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    from fastapi.testclient import TestClient
+
+    monkeypatch.setenv("RETRIEVER", "stub")
+    monkeypatch.setenv("LLM_PROVIDER", "stub")
+    from app.main import app
+
+    with TestClient(app) as client:
+        body = client.post("/api/retrieve", json={"question": "What CGPA means warning?"}).json()
+    assert body["retrieved"] and {"chunk_id", "source", "section", "score"} <= set(body["retrieved"][0])

@@ -1,0 +1,18 @@
+# Pairs for choosing the semantic-cache threshold (scripts/cache_threshold.py).
+# same: should be a cache HIT. different: must NEVER be a hit (different answers).
+# Add pairs from your own golden questions. Near-misses are the valuable ones.
+
+same:
+  - ["What is the maximum number of courses a student is allowed to repeat?", "How many courses can a student repeat at most?"]
+  - ["How is the CGPA calculated?", "How do I calculate my CGPA?"]
+  - ["What is the tuition fee per credit hour?", "How much is the tuition per credit hour?"]
+  - ["What does clause 1.21 of the academic rules require?", "What is required by clause 1.21?"]
+  - ["What is the fee refund policy?", "Can I get my fee refunded?"]
+
+different:
+  - ["What does clause 4.23 say about withdrawal?", "What does clause 4.24 say about withdrawal?"]
+  - ["What does clause 1.21 of the academic rules require?", "What does clause 1.22 of the academic rules require?"]
+  - ["What is the maximum number of courses a student may repeat?", "What is the maximum number of courses a student may withdraw from?"]
+  - ["What is the tuition fee per credit hour?", "What is the admission fee?"]
+  - ["What CGPA is needed for the Rector's List?", "What CGPA is needed for cum laude?"]
+  - ["What was the attendance rule in the 2023 rules?", "What is the attendance rule?"]

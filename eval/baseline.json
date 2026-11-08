@@ -1,0 +1,34 @@
+{
+  "recall_at_3": 0.9286,
+  "recall_at_5": 0.9286,
+  "citation_validity": 1.0,
+  "citations_total": 7,
+  "abstention_correctness": 1.0,
+  "abstain_questions": 2,
+  "by_type": {
+    "exact": {
+      "n": 2,
+      "recall_at_3": 0.5,
+      "recall_at_5": 0.5
+    },
+    "injection": {
+      "n": 1,
+      "recall_at_3": 1.0,
+      "recall_at_5": 1.0
+    },
+    "ordinary": {
+      "n": 9,
+      "recall_at_3": 1.0,
+      "recall_at_5": 1.0
+    },
+    "version": {
+      "n": 2,
+      "recall_at_3": 1.0,
+      "recall_at_5": 1.0
+    }
+  },
+  "injection_obeyed": [],
+  "golden": "/home/maha/rahbar/eval/golden.yaml",
+  "mode": "full",
+  "questions": 16
+}
