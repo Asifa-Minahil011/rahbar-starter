@@ -36,7 +36,7 @@ questions:
 
   - id: q05
     type: ordinary
-    question: What restrictions apply to a student who is on academic warning or probation?
+    question: Which courses must a student on academic warning or probation register for?
     relevant:
       - {source: academic-rules-handbook-jun-2026.pdf, section: "4.4"}
 
@@ -48,9 +48,9 @@ questions:
 
   - id: q07
     type: ordinary
-    question: How are repeated courses counted when the CGPA is calculated?
+    question: What happens to a student who fails to meet the attendance requirements in a course?
     relevant:
-      - {source: academic-rules-handbook-jun-2026.pdf, section: "2.7"}
+      - {source: academic-rules-handbook-jun-2026.pdf, section: "1.22"}
 
   - id: q08
     type: ordinary

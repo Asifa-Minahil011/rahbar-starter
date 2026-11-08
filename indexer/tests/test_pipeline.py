@@ -200,3 +200,10 @@ def test_table_of_contents_dot_leaders_are_removed() -> None:
     doc = clean(_doc("Table of Contents\nAttendance...........12\nI N T R O D U C T I O N ccsse....cccc\n"
                      "Real sentence stays here."))
     assert "......" not in doc.pages[0].text and "Real sentence stays here." in doc.pages[0].text
+
+
+def test_footer_rendered_as_a_table_row_is_stripped() -> None:
+    pages = [f"{n}.1 Real clause {n} text here.\n| {n + 20} | Undergraduate Academic Rules and Regulations 2026 |"
+             for n in range(1, 7)]
+    text = "\n".join(p.text for p in clean(_doc(*pages)).pages)
+    assert "Undergraduate Academic Rules" not in text and "3.1 Real clause 3 text here." in text

@@ -33,7 +33,7 @@ def _norm(line: str) -> str:
     """Key for repeat detection: page counters and a leading/trailing bare number are
     ignored, but digits inside clause numbers ("5.4") are kept, so two different
     headings never look like one repeated header."""
-    t = re.sub(r"\s+", " ", line.strip().lower())
+    t = re.sub(r"\s+", " ", line.replace("|", " ").strip().lower())   # pdfplumber renders some footers as tables
     t = re.sub(r"\bpage\s*\d+(\s*(of|/)\s*\d+)?\b", "", t)
     t = re.sub(r"^\d+\s+|\s*[|\-\u2013]?\s*\d+$", "", t)
     return t.strip()
