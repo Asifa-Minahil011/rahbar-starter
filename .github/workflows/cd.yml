@@ -1,0 +1,165 @@
+name: cd
+
+# Runs when a change lands on main: test it, publish SHA-tagged images, prove it deploys.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege: nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-main
+  cancel-in-progress: false
+
+env:
+  REGISTRY_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    env:
+      RETRIEVER: stub
+      LLM_PROVIDER: stub
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            api/requirements*.txt
+            indexer/requirements*.txt
+      - name: Install
+        run: |
+          pip install -r api/requirements-dev.txt
+          pip install -r indexer/requirements-dev.txt
+          pip install pytest-cov==6.0.0
+      - name: api tests
+        working-directory: api
+        run: pytest -q --cov=app --cov-fail-under=60
+      - name: indexer tests
+        working-directory: indexer
+        run: pytest -q
+
+  build-push:
+    needs: test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # Every image is tagged with the commit SHA. No floating tags are used anywhere.
+      - name: Build and push the three images
+        run: |
+          for name in api ui indexer; do
+            image="docker.io/${REGISTRY_USER}/rahbar-${name}:${GITHUB_SHA}"
+            docker build -t "$image" "$name"
+            docker push "$image"
+          done
+
+  deploy:
+    needs: build-push
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Create an ephemeral kind cluster
+        run: |
+          command -v kind >/dev/null || {
+            curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o kind \
+              https://kind.sigs.k8s.io/dl/v0.27.0/kind-linux-amd64
+            sudo install kind /usr/local/bin/
+          }
+          cat > kind.yaml <<'KIND'
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          nodes:
+          - role: control-plane
+            kubeadmConfigPatches:
+            - |
+              kind: InitConfiguration
+              nodeRegistration:
+                kubeletExtraArgs:
+                  node-labels: "ingress-ready=true"
+            extraPortMappings:
+            - containerPort: 80
+              hostPort: 80
+              protocol: TCP
+          KIND
+          kind create cluster --config kind.yaml --wait 120s
+
+      - name: Install the ingress controller
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.15.1/deploy/static/provider/kind/deploy.yaml
+          kubectl wait --namespace ingress-nginx --for=condition=ready pod \
+            --selector=app.kubernetes.io/component=controller --timeout=180s
+
+      # Pull on the runner (authenticated, so no anonymous rate limit) and load into the cluster.
+      - name: Load the images into the cluster
+        run: |
+          for name in api ui indexer; do
+            image="docker.io/${REGISTRY_USER}/rahbar-${name}:${GITHUB_SHA}"
+            docker pull "$image"
+            kind load docker-image "$image"
+          done
+          for image in chromadb/chroma:1.0.12 redis:7.4-alpine; do
+            docker pull "$image"
+            kind load docker-image "$image"
+          done
+
+      - name: Deploy the prod overlay, pinned to this commit
+        run: |
+          sed -i "s#REPLACE_DOCKERHUB_USER#${REGISTRY_USER}#g; s#REPLACE_SHA#${GITHUB_SHA}#g" \
+            k8s/overlays/prod/kustomization.yaml
+          kubectl apply -k k8s/overlays/prod
+
+      - name: Wait for the rollout
+        run: |
+          kubectl -n rahbar rollout status statefulset/chroma --timeout=300s
+          kubectl -n rahbar rollout status deployment/redis --timeout=300s
+          kubectl -n rahbar wait --for=condition=complete job/indexer --timeout=300s
+          kubectl -n rahbar rollout status deployment/api --timeout=300s
+          kubectl -n rahbar rollout status deployment/ui --timeout=300s
+
+      - name: Smoke test through the Ingress
+        shell: bash
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl -fsS -H "Host: rahbar.local" http://127.0.0.1/ -o /dev/null; then break; fi
+            sleep 2
+          done
+          echo "== ui"
+          curl -fsS -H "Host: rahbar.local" http://127.0.0.1/ | grep -qi "<html"
+          echo "== api"
+          answer="$(curl -fsS -X POST http://127.0.0.1/api/ask \
+            -H "Host: rahbar.local" -H "Content-Type: application/json" \
+            -d '{"question": "hello"}')"
+          echo "$answer"
+          echo "$answer" | grep -q '"answer"'
+
+      - name: What is running
+        run: |
+          {
+            echo "### Deployed commit"
+            echo "\`${GITHUB_SHA}\`"
+            echo
+            kubectl -n rahbar get deploy,sts -o wide
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          kubectl -n rahbar get deploy api -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
+
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get pods -A || true
+          kubectl -n rahbar describe pods || true
+          kubectl -n rahbar logs -l app=api --tail=40 || true
+          kubectl -n rahbar logs -l app=indexer --tail=40 || true
