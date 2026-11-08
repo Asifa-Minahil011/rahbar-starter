@@ -255,7 +255,10 @@ def main() -> int:
         (ev / "cache-threshold.txt").write_text(value + "\n", encoding="utf-8")
 
     def failure() -> None:
-        (docs / "FAILURE-ANALYSIS.md").write_text(failure_doc(root), encoding="utf-8")
+        text = failure_doc(root)
+        if "## Stage" not in text:
+            raise ValueError("no measured stage data yet (eval/failure-*.json, eval/tuning-b.json); file left untouched")
+        (docs / "FAILURE-ANALYSIS.md").write_text(text, encoding="utf-8")
 
     def q5() -> None:
         p = docs / "ENGINEERING-NOTES.md"
