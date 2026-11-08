@@ -74,11 +74,28 @@ def run_pipeline(settings: IndexerSettings) -> int:
     if not documents:
         raise SystemExit(f"no documents found in {settings.corpus_dir}")
     all_chunks: list[Chunk] = []
+    original_words = 0
+    skipped: list[str] = []
     for path, doc_version, superseded in documents:
-        doc = clean(extract(str(path), doc_version, superseded))
-        pieces = chunk(doc, settings.chunk_size, settings.chunk_overlap)
-        log("chunked", source=path.name, chunks=len(pieces))
+        try:
+            doc = clean(extract(str(path), doc_version, superseded))
+            pieces = chunk(doc, settings.chunk_size, settings.chunk_overlap)
+        except Exception as exc:   # one bad document must not sink the whole index
+            log("document skipped", source=path.name, error=repr(exc))
+            skipped.append(path.name)
+            continue
+        words = sum(len(p.text.split()) for p in doc.pages)
+        original_words += words
+        log("chunked", source=path.name, doc_version=doc_version, superseded=superseded,
+            chunks=len(pieces), words=words)
         all_chunks.extend(pieces)
+    if not all_chunks:
+        raise SystemExit("no chunks produced from any document")
+    stored_words = sum(len(c.text.split()) for c in all_chunks)
+    log("chunking summary", documents=len(documents) - len(skipped), skipped=skipped,
+        chunks=len(all_chunks), original_words=original_words, stored_words=stored_words,
+        storage_amplification=round(stored_words / max(original_words, 1), 3),
+        chunk_size=settings.chunk_size, chunk_overlap=settings.chunk_overlap)
     vectors = embed([c.text for c in all_chunks], settings)
     return store(all_chunks, vectors, settings)
 
