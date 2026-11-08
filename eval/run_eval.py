@@ -39,9 +39,15 @@ def load_golden(path: Path) -> list[dict]:
 
 def ask(client: httpx.Client, api: str, question: str) -> dict:
     """POST one question and return the AskResponse as a dict (see api/app/schemas.py)."""
-    response = client.post(f"{api.rstrip('/')}/api/ask", json={"question": question})
-    response.raise_for_status()
-    return response.json()
+    last: Exception | None = None
+    for _ in range(2):     # a CPU-bound model can time out once while it loads; retry once
+        try:
+            response = client.post(f"{api.rstrip('/')}/api/ask", json={"question": question})
+            response.raise_for_status()
+            return response.json()  # type: ignore[no-any-return]
+        except httpx.HTTPError as exc:
+            last = exc
+    raise last  # type: ignore[misc]
 
 
 def retrieve_only(client: httpx.Client, api: str, question: str) -> dict:
@@ -180,7 +186,7 @@ def main() -> int:
     questions = load_golden(args.golden)
     rows = []
     headers = {"Host": args.host} if args.host else {}
-    with httpx.Client(timeout=120.0, headers=headers) as client:
+    with httpx.Client(timeout=900.0, headers=headers) as client:
         for q in questions:
             started = time.perf_counter()
             fetch = retrieve_only if args.retrieval_only else ask
