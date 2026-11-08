@@ -8,21 +8,44 @@ Indexing runs once, and again when the material changes (`indexer/`, a Job). Que
 text is rasterised at 300 dpi and OCR'd with Tesseract; those pages carry `ocr=True` and are counted in the
 `extracted` log line.
 
-OCR'd pages (from the indexing run): start-ups policy 8 of 8 pages (a pure scan), 2023 rules 24 of 26, rules
-handbook 2026 5 of 58, student handbook 4 of 64.
+OCR'd pages (indexing run log): start-ups policy 8 of 8 pages (a pure scan, `pdffonts` lists no fonts), 2023 rules
+24 of 26, rules handbook 2026 5 of 58, student handbook 4 of 64.
 
-Tables are cut out of the running text and re-rendered one line per row with the header repeated in every cell,
-because a raw dump puts column headings far from the numbers and an embedding cannot connect them.
+Tables are cut out of the running text and re-rendered one line per row, with the column header repeated in every
+cell, because a plain dump puts the headings far from the numbers and an embedding cannot connect them. A real
+stored chunk from `fee-structure-page.html` shows the result: `| Program: BBA / BS | Fee: Rs. 12,000 |`, and the
+refund table is stored as `| Timeline: Upto 10th day of commencement of classes | Percentage of Fee: 100% ...`.
 
-Before (plain text dump of a table, headings detached):
-`Campus Faculty Graduates Lahore 120 450 Karachi 95 380`
-After: `| Campus: Lahore | Faculty: 120 | Graduates: 450 |` and `| Campus: Karachi | Faculty: 95 | Graduates: 380 |`.
-VERIFY: replace this illustration with a real before and after from `annual-report-2023-24.pdf`
-(`python scripts/find_clause.py "Faculty" --source annual-report-2023`).
+Before and after for a table that did not work well: the grade-point table of the 2026 rules handbook (PDF page
+12). Plain `pdfplumber` text of the page:
 
-What could not be recovered: the 2023 rules are largely OCR text, so the OCR garbles some words (the table of
-contents came out as `IMtrOdUCtION....ccss`, which is why dot-leader lines are dropped), and page headers on
-scanned pages are noise. Figures inside images (charts) are not extracted.
+    Grade Points Grade Points
+    A+ 4.00 C+ 2.33
+    A 4.00 C 2.00
+    A- 3.67 C- 1.67
+    B+ 3.33 D+ 1.33
+    B 3.00 D 1.00
+
+What we stored (chunk of section "2.7 In CGPA calculation for the courses that", page 12):
+
+    2.7 In CGPA calculation for the courses that 2.7 In CGPA calculation for the courses that have been repeated, | Grade | Points | Grade | Points | | A+ | 4.00 | C+ | 2.33 | | A | 4.00 | C | 2.00 | | A- | 3.67 | C- | 1.67 | | B+ | 3.33 | D+ | 1.33 | | B | 3.00 | D | 1.00 | | B- | 2.67 | F | 0.00 | | 6 | Undergraduate Academic Rules and Regulations 2026 | Grade Points only the most recent grade points are used, even if they are less than the earlier attempts.
+
+Two problems are visible. The table has two column pairs with the same header names (Grade, Points, Grade, Points),
+so the header cannot be repeated per cell and the renderer falls back to plain pipe-separated cells. And tables are
+appended at the end of their page's text, so this table is stored under the last section on the page ("2.7 In CGPA calculation for the courses that")
+and not under clause 2.3 where it belongs.
+
+What could not be recovered, found by inspecting the real index:
+- 43 of 769 chunks still carry a page-footer fragment (for example `| 22 | Undergraduate Academic Rules and
+  Regulations 2026 |`), because the footer is rendered as a table row and its page number changes.
+- The first chapter of the 2026 handbook has a duplicated text layer: heading lines repeat up to four times in
+  one chunk (clauses 1.1, 1.17, 1.18).
+- The handbook's two-column contents page leaks into clauses: clause 1.6's chunk contains `Use in Research 45
+  ... Detecting Generative AI Use in Assessments 45`.
+- The 2023 rules are 24 of 26 pages of OCR text. Its table of contents came out as garbage (`IMtrOdUCtION....`), so
+  dot-leader lines are removed; OCR also misreads some digits, so any 2023 value used in a golden question was
+  checked in the PDF.
+- Text inside images and charts is not extracted.
 
 ## Cleaning
 `indexer/pipeline/clean.py`. Rules applied: drop lines that repeat at the top or bottom of at least 40% of the

@@ -102,8 +102,9 @@ def describe(label: str, s: dict[str, Any]) -> list[str]:
     if s.get("citation_validity") is not None:
         lines.append(f"  citation validity {s['citation_validity']:.1%}, abstention "
                      f"{s['abstention_correctness'] if s['abstention_correctness'] is not None else 'n/a'}")
-    lines.append("  metrics: " + ", ".join(f"{k.removeprefix('rahbar_')}={v:g}" for k, v in s["metrics"].items()))
-    for qid, sources in s["version_question_sources"].items():
+    if s.get("metrics"):
+        lines.append("  metrics: " + ", ".join(f"{k.removeprefix('rahbar_')}={v:g}" for k, v in s["metrics"].items()))
+    for qid, sources in s.get("version_question_sources", {}).items():
         lines.append(f"  version question {qid} retrieved from: {', '.join(sources)}")
     return lines
 
@@ -113,6 +114,8 @@ def main() -> int:
     ap.add_argument("--stages", default="C,E", help="comma-separated: C, E, F")
     ap.add_argument("--golden", type=Path, default=ROOT / "eval" / "golden.yaml")
     ap.add_argument("--port", type=int, default=8020)
+    ap.add_argument("--baseline-full", type=Path,
+                    help="reuse a finished full eval (eval/results.json) as the stage F baseline")
     ap.add_argument("--out", type=Path, default=ROOT / "eval" / "failure-experiments.json")
     args = ap.parse_args()
     ev = load_eval()
@@ -128,8 +131,12 @@ def main() -> int:
     results["baseline"] = run_one(ev, golden, {}, False, args.port)
     print("\n".join(describe("baseline", results["baseline"])))
     if need_full:
-        print("\nbaseline FULL run (needed to compare stage F) ... slow")
-        results["baseline_full"] = run_one(ev, golden, {}, True, args.port)
+        if args.baseline_full and args.baseline_full.exists():
+            results["baseline_full"] = json.loads(args.baseline_full.read_text(encoding="utf-8"))
+            print(f"\nreusing the full eval in {args.baseline_full} as the stage F baseline")
+        else:
+            print("\nbaseline FULL run (needed to compare stage F) ... slow")
+            results["baseline_full"] = run_one(ev, golden, {}, True, args.port)
         print("\n".join(describe("baseline (full)", results["baseline_full"])))
     for stage in stages:
         cfg = STAGES[stage]
