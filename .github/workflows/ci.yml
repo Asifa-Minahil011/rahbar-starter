@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -42,7 +42,7 @@ jobs:
         run: mypy pipeline
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       # Stubs only: no network, no model, no cluster (section 6).
       RETRIEVER: stub
@@ -69,15 +69,18 @@ jobs:
         run: pytest -q
 
   manifests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Install kubeconform
         run: |
-          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz \
-            | tar -xz kubeconform
+          # GitHub release downloads sometimes answer 504; retry instead of failing the build.
+          curl -fsSL --retry 8 --retry-delay 5 --retry-all-errors -o kubeconform.tar.gz \
+            https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          tar -xzf kubeconform.tar.gz kubeconform
           sudo install kubeconform /usr/local/bin/
       - name: Validate the dev and prod overlays
+        shell: bash
         run: |
           for overlay in dev prod; do
             echo "== $overlay"
@@ -86,7 +89,7 @@ jobs:
           done
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       # Build only: nothing is pushed from a pull request (cd.yml publishes, from main).
@@ -105,7 +108,7 @@ jobs:
 
   scan:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v4
         with:
