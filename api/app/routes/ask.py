@@ -6,6 +6,7 @@ from fastapi import APIRouter, Request
 
 from ..schemas import AskRequest, AskResponse
 from ..services.answer import _refs, answer_question
+from ..services.cache import get_cache
 
 router = APIRouter(prefix="/api")
 
@@ -14,7 +15,7 @@ router = APIRouter(prefix="/api")
 def ask(body: AskRequest, request: Request) -> AskResponse:
     state = request.app.state
     return answer_question(body.question, state.retriever, state.provider, state.settings,
-                           cache=getattr(state, "cache", None))
+                           cache=get_cache(state))
 
 
 @router.post("/retrieve")
