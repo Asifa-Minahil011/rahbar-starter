@@ -11,6 +11,17 @@
 
 ## 5. recall@5 by question type: where is it worst, and why?
 
+Measured on the golden set (`eval/results.json`): overall recall@5 92.9%.
+
+| Question type | Questions | recall@3 | recall@5 |
+| --- | --- | --- | --- |
+| exact | 2 | 50.0% | 50.0% |
+| injection | 1 | 100.0% | 100.0% |
+| ordinary | 9 | 100.0% | 100.0% |
+| version | 2 | 100.0% | 100.0% |
+
+It is worst for **exact** questions (50.0%, 2 questions) and best for injection (100.0%). Embeddings struggle with exact terms because a clause number or a code like `4.23` is a rare token whose vector sits almost on top of `4.24`: the embedding captures what a passage is about, not which exact number it carries, so neighbouring clauses are near-duplicates in vector space. The technique from the RAG lecture that addresses it is hybrid retrieval (exact matching next to vectors). We implemented a small version: `exact_terms` (`api/app/retrieval/chroma.py:29`) pulls clause numbers and course codes out of the question, and candidates that contain them get a rank bonus (`HYBRID_BOOST`, `chroma.py:86`). In the tuning run the exact-term boost changed recall@5 from 92.9% to 92.9%; exact questions alone: 50.0% without it, 50.0% with it.
+
 ## 6. EMBED_MODEL changed on the API only: what does your system do?
 
 ## 7. The failure that cost us more than an hour

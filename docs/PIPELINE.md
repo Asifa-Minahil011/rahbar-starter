@@ -71,11 +71,13 @@ Shipped: size 400, overlap 50 (words). Final indexing run: 769 chunks from 86,65
 Three configurations measured on the golden set (`python scripts/tune_chunking.py`), recall@5 against the real
 retriever (`eval/tuning.json`):
 
-TUNING-TABLE-GOES-HERE
+| Size (words) | Overlap (words) | Chunks stored | Storage amplification | recall@3 | recall@5 | recall@5 with exact-term boost |
+| --- | --- | --- | --- | --- | --- | --- |
+| 200 | 30 | 988 | 1.184 | 92.9% | 92.9% | 92.9% |
+| 400 | 50 | 769 | 1.128 | 92.9% | 92.9% | 92.9% |
+| 600 | 100 | 710 | 1.137 | 92.9% | 92.9% | 92.9% |
 
-Why the shipped configuration: WRITE-YOUR-OWN-JUSTIFICATION from the table (the rules documents are insensitive to
-size because their clauses are short; say which config wins on the narrative documents and why you accepted its
-cost in chunks stored and amplification).
+Why the shipped configuration: 400:50 reached recall@5 92.9%, tied with the best other configuration, while storing 769 chunks at amplification 1.128. Other configurations: 200:30 92.9% (988 chunks), 600:100 92.9% (710 chunks). The rules documents are insensitive to size, because each clause is already its own short section; size matters for the narrative documents (handbook, annual reports).
 
 ## Embedding
 Model `nomic-embed-text` via Ollama (`/api/embed`, batches of 16), vector dimension 768. Documents are embedded
@@ -86,8 +88,23 @@ is `EMBED_MODEL` in the ConfigMap, read by both the indexer and the API. The ind
 The new index is built in a scratch collection and renamed over the old one only after its count is verified.
 
 ## Semantic cache
-FILL IN with Asifa's cache: thresholds tried, the false hit that ruled one out, and the one shipped. The cache keys
-must include the collection's `index_id` so a re-index invalidates every cached answer.
+Thresholds measured on the pairs in `eval/cache_pairs.yaml` (paraphrases that must hit, near-misses that must never hit). The rule from the lecture: the lowest threshold with zero false hits.
+
+| Threshold | True hits (of 5 paraphrases) | False hits (of 3 near-misses) |
+| --- | --- | --- |
+| 0.85 | 4 | 1 ('What is the maximum number of courses a student may repeat?' vs 'What is the maximum number of courses a student may withdraw from?') |
+| 0.90 | 3 | 0 |
+| 0.93 | 2 | 0 |
+| 0.95 | 1 | 0 |
+| 0.97 | 0 | 0 |
+| 0.98 | 0 | 0 |
+
+Shipped: `CACHE_THRESHOLD=0.90` (ConfigMap).
+The false hit that ruled out 0.85: 'What is the maximum number of courses a student may repeat?' vs 'What is the maximum number of courses a student may withdraw from?'. A cached answer for that pair would be served to the wrong question.
+
+Pure cosine cannot separate near-misses: 'What does clause 4.23 say about withdrawal?' vs 'What does clause 4.24 say about withdrawal?' reached cosine 0.954, as similar as a paraphrase, yet the answers differ. So the cache also requires both questions to name the same clause numbers, course codes and years (`signature` in `api/app/services/cache.py`); such pairs never hit, at any threshold. The table above counts only the pairs the guard lets through.
+
+Never cached: abstentions, fallbacks, answers without a valid citation, follow-ups. Every key contains the index's `index_id`, so a re-index invalidates the cache (`api/app/services/cache.py`).
 
 ## Evaluation method
 `eval/run_eval.py`. A retrieved passage matches a golden one when the source file is equal and the golden section
