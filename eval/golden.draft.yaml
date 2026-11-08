@@ -112,3 +112,19 @@ questions:
   #      - {source: academic-rules-handbook-jun-2026.pdf, section: "<clause>"}
   #    expect: "<the 2026 value>"
   #    forbid: ["<the 2023 value, if it is a distinctive string>"]
+
+  - id: q15
+    type: version
+    question: How many weeks of teaching does a regular semester have?
+    relevant:
+      - {source: academic-rules-handbook-jun-2026.pdf, section: "1.6"}
+    expect: "16"
+    forbid: ["15/16"]
+
+  - id: q16
+    type: version
+    question: How long is the summer semester?
+    relevant:
+      - {source: academic-rules-handbook-jun-2026.pdf, section: "6.1"}
+    expect: "8"
+    forbid: ["8 to 9 weeks", "8-9 weeks"]
