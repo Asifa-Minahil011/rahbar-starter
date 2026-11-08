@@ -1,0 +1,138 @@
+name: ci
+
+# Every change to main arrives through a pull request, and every push to dev is checked too.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+# Least privilege: these jobs only read the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            api/requirements*.txt
+            indexer/requirements*.txt
+      - name: Install
+        run: |
+          pip install -r api/requirements-dev.txt
+          pip install -r indexer/requirements-dev.txt
+      - name: ruff
+        run: ruff check api indexer eval corpus
+      - name: mypy (api)
+        working-directory: api
+        run: mypy app
+      - name: mypy (indexer)
+        working-directory: indexer
+        run: mypy pipeline
+
+  test:
+    runs-on: ubuntu-24.04
+    env:
+      # Stubs only: no network, no model, no cluster (section 6).
+      RETRIEVER: stub
+      LLM_PROVIDER: stub
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            api/requirements*.txt
+            indexer/requirements*.txt
+      - name: Install
+        run: |
+          pip install -r api/requirements-dev.txt
+          pip install -r indexer/requirements-dev.txt
+          pip install pytest-cov==6.0.0
+      - name: api tests (coverage of the app package must be at least 60%)
+        working-directory: api
+        run: pytest -q --cov=app --cov-report=term-missing --cov-fail-under=60
+      - name: indexer tests
+        working-directory: indexer
+        run: pytest -q
+
+  manifests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kubeconform
+        shell: bash
+        run: |
+          # GitHub release downloads sometimes answer 504 for minutes at a time.
+          # Try them briefly, then fall back to building from the Go module proxy.
+          if curl -fsSL --retry 3 --retry-delay 5 --retry-all-errors -o kubeconform.tar.gz \
+               https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz \
+             && tar -xzf kubeconform.tar.gz kubeconform; then
+            sudo install kubeconform /usr/local/bin/
+          else
+            echo "release download failed; building kubeconform from source"
+            GOBIN="$PWD/bin" go install github.com/yannh/kubeconform/cmd/kubeconform@v0.6.7
+            sudo install "$PWD/bin/kubeconform" /usr/local/bin/
+          fi
+          kubeconform -v
+      - name: Validate the dev and prod overlays
+        shell: bash
+        run: |
+          for overlay in dev prod; do
+            echo "== $overlay"
+            kubectl kustomize "k8s/overlays/$overlay" \
+              | kubeconform -strict -summary -kubernetes-version 1.31.0 -
+          done
+
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # Build only: nothing is pushed from a pull request (cd.yml publishes, from main).
+      - name: Build the three images
+        run: |
+          docker build -t rahbar-api:ci api
+          docker build -t rahbar-ui:ci ui
+          docker build -t rahbar-indexer:ci indexer
+      - name: Save the images for the scan job
+        run: docker save rahbar-api:ci rahbar-ui:ci rahbar-indexer:ci -o images.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: images
+          path: images.tar
+          retention-days: 1
+
+  scan:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: images
+      - name: Load the images
+        run: docker load -i images.tar
+      # Fail on HIGH or CRITICAL findings that already have a fix available.
+      - name: Trivy
+        run: |
+          status=0
+          for image in rahbar-api:ci rahbar-ui:ci rahbar-indexer:ci; do
+            echo "== $image"
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              aquasec/trivy:0.57.1 image \
+              --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed --no-progress \
+              "$image" || status=1
+          done
+          exit $status

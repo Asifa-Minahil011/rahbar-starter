@@ -33,8 +33,14 @@ class Settings:
     chroma_port: int = 8000
     collection: str = "rahbar"
 
+    # Semantic cache (section 3.3)
+    redis_host: str = "redis"
+    redis_port: int = 6379
+
     # Retrieval and generation
     top_k: int = 5
+    relevance_floor: float = 0.5     # RELEVANCE_FLOOR: best cosine similarity below this = abstain
+    hybrid_boost: float = 0.15       # HYBRID_BOOST: rank bonus for exact clause/code matches (0 = off)
     temperature: float = 0.2
     llm_model: str = "llama3.2:3b"
     ollama_url: str = "http://host.minikube.internal:11434"
@@ -52,7 +58,11 @@ def get_settings() -> Settings:
         chroma_host=os.environ.get("CHROMA_HOST", "chroma"),
         chroma_port=_int("CHROMA_PORT", 8000),
         collection=os.environ.get("CHROMA_COLLECTION", "rahbar"),
+        redis_host=os.environ.get("REDIS_HOST", "redis"),
+        redis_port=_int("REDIS_PORT", 6379),
         top_k=_int("TOP_K", 5),
+        relevance_floor=_float("RELEVANCE_FLOOR", 0.5),
+        hybrid_boost=_float("HYBRID_BOOST", 0.15),
         temperature=_float("TEMPERATURE", 0.2),
         llm_model=os.environ.get("LLM_MODEL", "llama3.2:3b"),
         ollama_url=os.environ.get("OLLAMA_URL", "http://host.minikube.internal:11434"),
