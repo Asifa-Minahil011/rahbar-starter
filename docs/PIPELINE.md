@@ -9,7 +9,7 @@ text is rasterised at 300 dpi and OCR'd with Tesseract; those pages carry `ocr=T
 `extracted` log line.
 
 OCR'd pages (from the indexing run): start-ups policy 8 of 8 pages (a pure scan), 2023 rules 24 of 26, rules
-handbook 2026 5 of 58, student handbook 4 of 64. VERIFY: copy the counts from your newest `index-run` log.
+handbook 2026 5 of 58, student handbook 4 of 64.
 
 Tables are cut out of the running text and re-rendered one line per row with the header repeated in every cell,
 because a raw dump puts column headings far from the numbers and an embedding cannot connect them.
@@ -44,9 +44,7 @@ In the rules documents each clause is its own section, so chunks are short there
 56 words per chunk, the 2026 handbook about 78), and the size limit only matters for long narrative documents
 (annual reports, student handbook).
 
-Shipped: size 400, overlap 50 (words). First indexing run: 703 chunks from 87,574 original words; stored words
-94,406; storage amplification 1.078 (stored / original). VERIFY: update both numbers from the `chunking summary`
-line of the final run.
+Shipped: size 400, overlap 50 (words). Final indexing run: 769 chunks from 86,658 original words; stored words 97,775; storage amplification 1.128 (stored / original). 43 of the chunks still carry a page-footer fragment.
 
 Three configurations measured on the golden set (`python scripts/tune_chunking.py`), recall@5 against the real
 retriever (`eval/tuning.json`):

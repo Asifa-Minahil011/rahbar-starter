@@ -1,7 +1,5 @@
 # Engineering notes
 
-<!-- STARTER-TODO(7): answer all seven questions from section 7 of the case study, each
-     pointing to your own files and line numbers. A generic answer scores zero. -->
 
 ## 1. Indexing in API startup: what breaks with 3 replicas and one Chroma volume?
 
