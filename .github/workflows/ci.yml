@@ -115,11 +115,13 @@ jobs:
       # Fail on HIGH or CRITICAL findings that already have a fix available.
       - name: Trivy
         run: |
+          status=0
           for image in rahbar-api:ci rahbar-ui:ci rahbar-indexer:ci; do
             echo "== $image"
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
               aquasec/trivy:0.57.1 image \
               --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed --no-progress \
-              "$image"
+              "$image" || status=1
           done
+          exit $status

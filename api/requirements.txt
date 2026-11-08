@@ -1,5 +1,7 @@
 # Pinned: an unpinned dependency is the drift problem from Lecture 04.
-fastapi==0.115.12
+fastapi==0.162.2
+# starlette is pulled in by fastapi; pinned because 0.46.2 had HIGH advisories (DoS).
+starlette==1.10.0
 uvicorn==0.34.2
 pydantic==2.11.4
 httpx==0.28.1
