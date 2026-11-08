@@ -27,3 +27,5 @@ Baseline, nothing broken: recall@5 92.9% (by type: exact 50.0%, injection 100.0%
 - **Symptom (measured):** citation validity 100.0% (baseline 100.0%), abstention correctness 100.0% (baseline 100.0%). Counters in this run: retries 3, fallbacks 1, invalid citations dropped 13. Retrieval recall is unchanged by temperature, which is how this stage is told apart from A to E.
 - **Diagnosis, as if we had not caused it:** retrieval-only recall is normal while the generation counters (`rahbar_generation_retries_total`, `rahbar_fallbacks_total`, `rahbar_invalid_citations_total` in `/metrics`) and citation validity move.
 - **Remedy:** `TEMPERATURE=0.2` from the ConfigMap, schema-constrained output, one retry and a safe fallback.
+
+Note on stage F: citation validity stays at 100% because fabricated citations are dropped by the validator before the response leaves the API, so the symptom shows up in `rahbar_invalid_citations_total` (13 in this run) and in the retries and fallbacks, not in the validity score.

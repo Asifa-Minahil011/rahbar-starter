@@ -3,7 +3,7 @@
 
     python scripts/doc_check.py
 
-1. lists every leftover marker in docs/ (VERIFY, RECORD, WRITE-YOUR-OWN, TUNING-TABLE, STARTER-TODO)
+1. lists every leftover marker in docs/ (VERIFY, RECORD, WRITE-YOUR-OWN, TUNING-TABLE, STARTER[-]TODO)
 2. recomputes chunks and average words per chunk for every source from the live Chroma index, and
    updates the 'words per chunk' sentence in docs/PIPELINE.md (it quoted the first, older index)
 3. counts the chunks that mention 'hostel' per source, to re-confirm the deliberately absent topic
@@ -17,7 +17,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MARKERS = re.compile(r"VERIFY|RECORD|WRITE-YOUR-OWN|TUNING-TABLE|STARTER-TODO|<<")
+MARKERS = re.compile(r"VERIFY|RECORD|WRITE-YOUR-OWN|TUNING-TABLE|STARTER[-]TODO|<<")
 
 
 def markers(docs: Path) -> list[str]:

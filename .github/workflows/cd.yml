@@ -1,0 +1,158 @@
+name: cd
+
+# Runs when a pull request is merged into main (a push to main). Order: test -> build-push -> deploy.
+# Needs two repository secrets (Settings -> Secrets and variables -> Actions):
+#   DOCKERHUB_USERNAME   your Docker Hub user name
+#   DOCKERHUB_TOKEN      a Docker Hub access token (never the account password)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege: nothing here writes to the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_TAG: ${{ github.sha }}     # deploy by commit SHA, never :latest
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    env:
+      RETRIEVER: stub              # no network, no model, no cluster
+      LLM_PROVIDER: stub
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            api/requirements*.txt
+            indexer/requirements*.txt
+      - name: Install
+        run: |
+          pip install -r api/requirements-dev.txt
+          pip install -r indexer/requirements-dev.txt
+          pip install pytest-cov==6.0.0
+      - name: api tests (coverage of the app package must be at least 60%)
+        working-directory: api
+        run: pytest -q --cov=app --cov-report=term-missing --cov-fail-under=60
+      - name: indexer tests
+        working-directory: indexer
+        run: pytest -q
+
+  build-push:
+    needs: test                    # never publish images built from code that failed its tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to Docker Hub (access token from GitHub Secrets)
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push rahbar-api
+        uses: docker/build-push-action@v6
+        with:
+          context: api
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/rahbar-api:${{ github.sha }}
+      - name: Build and push rahbar-ui
+        uses: docker/build-push-action@v6
+        with:
+          context: ui
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/rahbar-ui:${{ github.sha }}
+      - name: Build and push rahbar-indexer
+        uses: docker/build-push-action@v6
+        with:
+          context: indexer
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/rahbar-indexer:${{ github.sha }}
+
+  deploy:
+    needs: build-push              # only deploy images that were published
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub and load the published images into the cluster
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+          for image in rahbar-api rahbar-ui rahbar-indexer; do
+            docker pull "docker.io/$DOCKERHUB_USERNAME/$image:$IMAGE_TAG"
+          done
+
+      - name: Ephemeral kind cluster with an ingress controller
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: rahbar-cd
+          config: .github/kind-config.yaml
+
+      - name: Install ingress-nginx
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/kind/deploy.yaml
+          kubectl -n ingress-nginx rollout status deployment/ingress-nginx-controller --timeout=180s
+
+      - name: Load the images into kind
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          for image in rahbar-api rahbar-ui rahbar-indexer; do
+            kind load docker-image "docker.io/$DOCKERHUB_USERNAME/$image:$IMAGE_TAG" --name rahbar-cd
+          done
+
+      - name: Render the prod overlay with this commit's images
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          sed -i "s/REPLACE_DOCKERHUB_USER/$DOCKERHUB_USERNAME/; s/REPLACE_SHA/$IMAGE_TAG/" k8s/overlays/prod/kustomization.yaml
+          kubectl kustomize k8s/overlays/prod > rendered.yaml
+          grep -c "image:" rendered.yaml
+          if grep -n ":latest" rendered.yaml; then echo "a :latest image is not allowed"; exit 1; fi
+
+      - name: Apply the manifests
+        run: |
+          kubectl apply -f rendered.yaml
+          # The Secret is created from the command line in real use; CI uses a placeholder value.
+          kubectl create secret generic rahbar-secret -n rahbar --from-literal=LLM_API_KEY=ci-placeholder \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Wait for the rollouts that do not need an index
+        run: |
+          kubectl -n rahbar rollout status statefulset/chroma --timeout=240s
+          kubectl -n rahbar rollout status deployment/redis --timeout=240s
+          kubectl -n rahbar rollout status deployment/ui --timeout=240s
+
+      - name: What is running
+        run: |
+          echo "commit: $GITHUB_SHA"
+          kubectl -n rahbar get deploy -o custom-columns=NAME:.metadata.name,IMAGE:.spec.template.spec.containers[0].image
+          test "$(kubectl -n rahbar get deploy ui -o jsonpath='{.spec.template.spec.containers[0].image}' | sed 's/.*://')" = "$GITHUB_SHA"
+
+      - name: Smoke test through the Ingress
+        run: |
+          host=$(kubectl -n rahbar get ingress -o jsonpath='{.items[0].spec.rules[0].host}')
+          echo "ingress host: ${host:-<none>}"
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' ${host:+-H "Host: $host"} http://localhost/ || true)
+            echo "attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 5
+          done
+          kubectl -n rahbar get pods,ingress
+          exit 1
+
+      - name: Pod status (for the log)
+        if: always()
+        run: kubectl -n rahbar get pods -o wide || true
