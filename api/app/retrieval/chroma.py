@@ -54,11 +54,7 @@ class ChromaRetriever:
                                          settings=ChromaSettings(anonymized_telemetry=False))
         self.client = client
         self._embed = embed or (lambda q: embed_query(q, settings))
-<<<<<<< HEAD
         self._old: tuple[float | None, set[str]] = (None, set())
-=======
-        self._old: tuple[float, set[str]] = (float("-inf"), set())
->>>>>>> origin/dev
 
     def collection(self) -> Any:
         # Looked up on every query on purpose: the indexer swaps the collection on
