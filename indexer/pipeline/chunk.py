@@ -19,7 +19,7 @@ from __future__ import annotations
 import re
 
 from .models import Chunk, Document
-from .structure import heading_text
+from .structure import heading_text, short_label
 
 SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9(\"'])")
 MIN_WORDS = 3
@@ -99,7 +99,11 @@ def chunk(doc: Document, size: int, overlap: int) -> list[Chunk]:
             if h:
                 if current:
                     sections.append((heading, current))
-                heading, current, seen_heading = h, [], True
+                # Clause lines ("1.21 Students are required to ...") look like headings.
+                # Label the section with the clause number and first words, and keep a
+                # long heading line as body text too, so no clause text is ever dropped.
+                heading, seen_heading = short_label(h), True
+                current = [(h, page.page)] if len(h.split()) > 6 else []
                 continue
             if not seen_heading and heading != f"Page {page.page}":
                 # no heading yet (scans, flat text): one section per page, so citations

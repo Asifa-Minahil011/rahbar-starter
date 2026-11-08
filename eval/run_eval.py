@@ -7,8 +7,7 @@
 
 Exit code 0 when every gate passes, 1 when any fails. CI relies on that exit code.
 
-Given: talking to the API, reading the golden set, writing results.json, the exit
-code. Yours: the four functions marked STARTER-TODO. They are the evaluation.
+Gate: abstention 100%, citation validity >= 95%, recall@5 within 5 points of baseline.
 """
 
 from __future__ import annotations
@@ -43,6 +42,15 @@ def ask(client: httpx.Client, api: str, question: str) -> dict:
     response = client.post(f"{api.rstrip('/')}/api/ask", json={"question": question})
     response.raise_for_status()
     return response.json()
+
+
+def retrieve_only(client: httpx.Client, api: str, question: str) -> dict:
+    """POST /api/retrieve: no model call. Shaped like an AskResponse so summarise() works;
+    answered_from_context is None, meaning 'not measured' (abstention is skipped)."""
+    r = client.post(f"{api.rstrip('/')}/api/retrieve", json={"question": question})
+    r.raise_for_status()
+    return {"retrieved": r.json()["retrieved"], "citations": [], "answer": "",
+            "answered_from_context": None}
 
 
 def _norm(text: str) -> str:
@@ -115,7 +123,7 @@ def summarise(rows: list[dict]) -> dict:
             valid += int(any(_norm(c.get("source", "")) == _norm(r.get("source", ""))
                              and _norm(c.get("section", "")) == _norm(r.get("section", ""))
                              for r in retrieved))
-        if row["must_abstain"]:
+        if row["must_abstain"] and resp.get("answered_from_context") is not None:
             abstain_total += 1
             abstain_ok += int(resp.get("answered_from_context") is False)
         answer = _norm(resp.get("answer", ""))
@@ -160,17 +168,23 @@ def main() -> int:
     parser.add_argument("--golden", type=Path, default=HERE / "golden.yaml")
     parser.add_argument("--baseline", type=Path, default=HERE / "baseline.json")
     parser.add_argument("--out", type=Path, default=HERE / "results.json")
+    parser.add_argument("--retrieval-only", action="store_true",
+                        help="call /api/retrieve (no LLM): recall@k only, runs in seconds")
     parser.add_argument("--update-baseline", action="store_true",
                         help="write these results as the new baseline")
     args = parser.parse_args()
 
+    if args.retrieval_only and args.update_baseline:
+        sys.exit("--update-baseline needs a full run (abstention and citations are not "
+                 "measured with --retrieval-only)")
     questions = load_golden(args.golden)
     rows = []
     headers = {"Host": args.host} if args.host else {}
     with httpx.Client(timeout=120.0, headers=headers) as client:
         for q in questions:
             started = time.perf_counter()
-            response = ask(client, args.api, q["question"])
+            fetch = retrieve_only if args.retrieval_only else ask
+            response = fetch(client, args.api, q["question"])
             rows.append({
                 "id": q["id"], "type": q.get("type", "ordinary"),
                 "must_abstain": bool(q.get("must_abstain", False)),
@@ -191,6 +205,7 @@ def main() -> int:
         return 2
 
     results["golden"] = str(args.golden)
+    results["mode"] = "retrieval-only" if args.retrieval_only else "full"
     results["questions"] = len(rows)
     args.out.write_text(json.dumps(results, indent=2), encoding="utf-8")
     print(f"\nresults written to {args.out}")

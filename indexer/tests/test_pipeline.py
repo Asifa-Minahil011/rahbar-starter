@@ -183,3 +183,20 @@ def test_store_swaps_in_a_new_index_and_records_the_pin() -> None:
 def test_store_refuses_mismatched_vectors() -> None:
     with pytest.raises(ValueError):
         store([], [], get_settings(), FakeClient())
+
+
+def test_clause_line_is_labelled_by_number_and_its_text_is_kept() -> None:
+    clause = "1.21 Students are required to maintain 100% attendance in lectures"
+    doc = clean(_doc("1. General\n\n" + clause + "\n\n1.22 Failure to meet attendance requirements "
+                     "in a course will result in an F grade"))
+    chunks = chunk(doc, 400, 50)
+    c121 = next(c for c in chunks if c.section.startswith("1.21"))
+    assert c121.section == "1.21 Students are required to maintain 100% attendance"
+    assert "maintain 100% attendance in lectures" in c121.text      # nothing dropped
+    assert any("F grade" in c.text for c in chunks)
+
+
+def test_table_of_contents_dot_leaders_are_removed() -> None:
+    doc = clean(_doc("Table of Contents\nAttendance...........12\nI N T R O D U C T I O N ccsse....cccc\n"
+                     "Real sentence stays here."))
+    assert "......" not in doc.pages[0].text and "Real sentence stays here." in doc.pages[0].text

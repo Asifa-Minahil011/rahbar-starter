@@ -37,3 +37,10 @@ def starts_new_block(line: str) -> bool:
     return bool(
         heading_text(s) or CLAUSE_START.match(s) or BULLET.match(s) or s.startswith("|")
     )
+
+
+def short_label(heading: str, words: int = 8) -> str:
+    """Section label stored in metadata and quoted in citations: clause number plus the
+    first few words. Short enough for a model to copy exactly, long enough to be readable."""
+    parts = heading.split()
+    return " ".join(parts[:words])

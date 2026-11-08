@@ -63,8 +63,9 @@ class ChromaRetriever:
 
     def retrieve(self, question: str, k: int) -> list[Passage]:
         vector = self._embed(question)
-        where = None if wants_older_version(question, self._old_versions()) \
-            else {"superseded": False}
+        use_filter = self.settings.superseded_filter and not wants_older_version(
+            question, self._old_versions())
+        where = {"superseded": False} if use_filter else None
         res = self.collection().query(
             query_embeddings=[vector], n_results=k * CANDIDATES, where=where,
             include=["documents", "metadatas", "distances"],

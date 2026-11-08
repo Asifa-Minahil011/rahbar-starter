@@ -1,25 +1,79 @@
 # Indexing and retrieval pipeline
 
-<!-- STARTER-TODO(3.1, 3.3, 5.2): fill each section with your numbers, then delete this comment. -->
+Indexing runs once, and again when the material changes (`indexer/`, a Job). Querying runs on every question
+(`api/`, reads only).
 
 ## Extraction
-Which documents needed OCR, one before-and-after example of a table, what could not be recovered.
+`indexer/pipeline/extract.py`. PDFs go through pdfplumber page by page. A page with fewer than 25 characters of
+text is rasterised at 300 dpi and OCR'd with Tesseract; those pages carry `ocr=True` and are counted in the
+`extracted` log line.
+
+OCR'd pages (from the indexing run): start-ups policy 8 of 8 pages (a pure scan), 2023 rules 24 of 26, rules
+handbook 2026 5 of 58, student handbook 4 of 64. VERIFY: copy the counts from your newest `index-run` log.
+
+Tables are cut out of the running text and re-rendered one line per row with the header repeated in every cell,
+because a raw dump puts column headings far from the numbers and an embedding cannot connect them.
+
+Before (plain text dump of a table, headings detached):
+`Campus Faculty Graduates Lahore 120 450 Karachi 95 380`
+After: `| Campus: Lahore | Faculty: 120 | Graduates: 450 |` and `| Campus: Karachi | Faculty: 95 | Graduates: 380 |`.
+VERIFY: replace this illustration with a real before and after from `annual-report-2023-24.pdf`
+(`python scripts/find_clause.py "Faculty" --source annual-report-2023`).
+
+What could not be recovered: the 2023 rules are largely OCR text, so the OCR garbles some words (the table of
+contents came out as `IMtrOdUCtION....ccss`, which is why dot-leader lines are dropped), and page headers on
+scanned pages are noise. Figures inside images (charts) are not extracted.
 
 ## Cleaning
-The rules you applied, and one thing you deliberately did not strip.
+`indexer/pipeline/clean.py`. Rules applied: drop lines that repeat at the top or bottom of at least 40% of the
+pages (running headers and footers, page counters), drop lone page numbers, drop table-of-contents lines (runs of
+dots), re-join lines the PDF wrapped mid-sentence and undo hyphenation, drop OCR single-character junk.
+
+Deliberately not stripped: clause numbers (`1.21`), heading lines, and table-row lines. Exact-term questions and
+citations depend on them.
 
 ## Chunking
-Size and overlap you shipped, storage amplification (stored tokens / original tokens),
-and the three configurations you measured:
+`indexer/pipeline/chunk.py`. Structure-aware: a heading or numbered clause starts a new section, paragraphs are
+packed up to the size, an over-long paragraph is split on sentences, and each chunk starts with the last
+`overlap` words of its predecessor in the same section. The size unit is words (whitespace-separated), not model
+tokens, so it needs no tokenizer; for English that is roughly 1.3 tokens per word. Each chunk text begins with its
+section label.
 
-| Size (tokens) | Overlap (tokens) | recall@5 | Chunks stored |
-| --- | --- | --- | --- |
+Section label: the clause number plus its first eight words (`1.21 Students are required to maintain 100% attendance`).
+In the rules documents each clause is its own section, so chunks are short there (the 2023 edition averages about
+56 words per chunk, the 2026 handbook about 78), and the size limit only matters for long narrative documents
+(annual reports, student handbook).
+
+Shipped: size 400, overlap 50 (words). First indexing run: 703 chunks from 87,574 original words; stored words
+94,406; storage amplification 1.078 (stored / original). VERIFY: update both numbers from the `chunking summary`
+line of the final run.
+
+Three configurations measured on the golden set (`python scripts/tune_chunking.py`), recall@5 against the real
+retriever (`eval/tuning.json`):
+
+TUNING-TABLE-GOES-HERE
+
+Why the shipped configuration: WRITE-YOUR-OWN-JUSTIFICATION from the table (the rules documents are insensitive to
+size because their clauses are short; say which config wins on the narrative documents and why you accepted its
+cost in chunks stored and amplification).
 
 ## Embedding
-Model, vector dimension, where the pin lives, how the API checks it.
+Model `nomic-embed-text` via Ollama (`/api/embed`, batches of 16), vector dimension 768. Documents are embedded
+with the prefix `search_document: ` and questions with `search_query: `; nomic trains the two as a pair. The pin
+is `EMBED_MODEL` in the ConfigMap, read by both the indexer and the API. The indexer writes `embed_model`,
+`dimension` and a random `index_id` into the Chroma collection metadata (`indexer/pipeline/store.py`); the API's
+`/readyz` compares `embed_model` with its own and refuses to become ready on a mismatch (`api/app/routes/health.py`).
+The new index is built in a scratch collection and renamed over the old one only after its count is verified.
 
 ## Semantic cache
-Thresholds you tried, the false hit that ruled one out, the one you shipped.
+FILL IN with Asifa's cache: thresholds tried, the false hit that ruled one out, and the one shipped. The cache keys
+must include the collection's `index_id` so a re-index invalidates every cached answer.
 
 ## Evaluation method
-How recall@k matches retrieved passages to golden ones (by source and section? by chunk id?).
+`eval/run_eval.py`. A retrieved passage matches a golden one when the source file is equal and the golden section
+is a prefix of the stored section on a word or dot boundary (`5.4` matches `5.4 Academic Warning` and `5.4.1`, not
+`5.40`). Matching by section rather than chunk id keeps the golden set valid when the chunk size changes.
+recall@k = relevant passages found in the top k / relevant passages, per question, averaged, and reported overall
+and by question type. Citation validity = citations that match a passage retrieved for that request / all
+citations. Abstention correctness = must-abstain questions answered `answered_from_context: false` / all of them.
+`--retrieval-only` skips the model and measures recall only.
