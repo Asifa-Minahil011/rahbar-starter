@@ -44,7 +44,7 @@ In the rules documents each clause is its own section, so chunks are short there
 56 words per chunk, the 2026 handbook about 78), and the size limit only matters for long narrative documents
 (annual reports, student handbook).
 
-Shipped: size 400, overlap 50 (words). Final indexing run: 769 chunks from 86,658 original words; stored words 97,775; storage amplification 1.128 (stored / original). 43 of the chunks still carry a page-footer fragment.
+Shipped: size 400, overlap 50 (words). Final indexing run: 769 chunks from 86,658 original words; stored words 97,775; storage amplification 1.128 (stored / original). 43 of the chunks still carry a page-footer fragment. Amplification rose from 1.078 to 1.128 after the chunker kept the full clause line in each chunk and prefixed each chunk with its section label.
 
 Three configurations measured on the golden set (`python scripts/tune_chunking.py`), recall@5 against the real
 retriever (`eval/tuning.json`):
