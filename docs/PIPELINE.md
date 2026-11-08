@@ -63,8 +63,7 @@ tokens, so it needs no tokenizer; for English that is roughly 1.3 tokens per wor
 section label.
 
 Section label: the clause number plus its first eight words (`1.21 Students are required to maintain 100% attendance`).
-In the rules documents each clause is its own section, so chunks are short there (the 2023 edition averages about
-56 words per chunk, the 2026 handbook about 78), and the size limit only matters for long narrative documents
+In the rules documents each clause is its own section, so chunks are short there (the 2023 edition averages about 60 words per chunk, the 2026 handbook about 77), and the size limit only matters for long narrative documents
 (annual reports, student handbook).
 
 Shipped: size 400, overlap 50 (words). Final indexing run: 769 chunks from 86,658 original words; stored words 97,775; storage amplification 1.128 (stored / original). 43 of the chunks still carry a page-footer fragment. Amplification rose from 1.078 to 1.128 after the chunker kept the full clause line in each chunk and prefixed each chunk with its section label.
