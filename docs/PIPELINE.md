@@ -114,3 +114,6 @@ recall@k = relevant passages found in the top k / relevant passages, per questio
 and by question type. Citation validity = citations that match a passage retrieved for that request / all
 citations. Abstention correctness = must-abstain questions answered `answered_from_context: false` / all of them.
 `--retrieval-only` skips the model and measures recall only.
+
+## Generation result
+On the golden set the system answered 7 of the 14 answerable questions: three were declined by the model and four ended in the validation fallback after two attempts. Retrieval is the strong part (recall@5 92.9%); generation with a 3-billion-parameter local model is the weak part. Abstention (100%) and citation validity (100%) both hold. A larger hosted model through the `hosted` provider (ADR 0004) is the intended next step.
