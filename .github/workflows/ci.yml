@@ -136,3 +136,54 @@ jobs:
               "$image" || status=1
           done
           exit $status
+
+  # The live evaluation (eval/run_eval.py against a running stack) needs Ollama, which CI does not
+  # have. CI therefore applies the same gate() to the committed measurements: results.json must
+  # not fall below baseline.json, and a self-test proves the gate rejects a worse result.
+  eval-gate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: api/requirements*.txt
+      - name: Install
+        run: pip install -r api/requirements-dev.txt
+      - name: Gate the committed results against the baseline
+        run: |
+          python - <<'PY'
+          import json, sys
+          sys.path.insert(0, "eval")
+          from run_eval import gate
+          results = json.load(open("eval/results.json"))
+          baseline = json.load(open("eval/baseline.json"))
+          failures = gate(results, baseline)
+          print("recall@5", results["recall_at_5"], "baseline", baseline["recall_at_5"])
+          print("citation validity", results["citation_validity"],
+                "abstention", results["abstention_correctness"])
+          for failure in failures:
+              print("GATE FAILED:", failure)
+          sys.exit(1 if failures else 0)
+          PY
+      - name: Self-test, the gate must reject a worse result
+        run: |
+          python - <<'PY'
+          import copy, json, sys
+          sys.path.insert(0, "eval")
+          from run_eval import gate
+          results = json.load(open("eval/results.json"))
+          baseline = json.load(open("eval/baseline.json"))
+          cases = {
+              "recall@5 down 10 points": {"recall_at_5": baseline["recall_at_5"] - 0.10},
+              "a must-abstain question answered": {"abstention_correctness": 0.5},
+              "citation validity 90%": {"citation_validity": 0.90},
+          }
+          for name, change in cases.items():
+              worse = copy.deepcopy(results)
+              worse.update(change)
+              if not gate(worse, baseline):
+                  sys.exit(f"the gate accepted a bad result: {name}")
+              print("rejected as expected:", name)
+          PY
