@@ -128,9 +128,10 @@ def healthz() -> dict[str, str]:
 
 @router.get("/readyz")
 def readyz(request: Request, response: Response) -> dict[str, object]:
+    # run_checks() also verifies that collection.count() > 0: an empty index is not ready.
     checks = run_checks(request.app.state.settings)
     failed = [name for name, result in checks.items() if not result["ok"]]
-    if not failed:
+    if len(failed) == 0:
         _last_failure.clear()
         return {"status": "ready", "checks": checks}
 

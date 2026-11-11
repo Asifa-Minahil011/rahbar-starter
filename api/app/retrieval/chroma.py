@@ -54,7 +54,7 @@ class ChromaRetriever:
                                          settings=ChromaSettings(anonymized_telemetry=False))
         self.client = client
         self._embed = embed or (lambda q: embed_query(q, settings))
-        self._old: tuple[float, set[str]] = (float("-inf"), set())
+        self._old: tuple[float | None, set[str]] = (None, set())
 
     def collection(self) -> Any:
         # Looked up on every query on purpose: the indexer swaps the collection on
@@ -63,8 +63,9 @@ class ChromaRetriever:
 
     def retrieve(self, question: str, k: int) -> list[Passage]:
         vector = self._embed(question)
-        where = None if wants_older_version(question, self._old_versions()) \
-            else {"superseded": False}
+        use_filter = self.settings.superseded_filter and not wants_older_version(
+            question, self._old_versions())
+        where = {"superseded": False} if use_filter else None
         res = self.collection().query(
             query_embeddings=[vector], n_results=k * CANDIDATES, where=where,
             include=["documents", "metadatas", "distances"],
@@ -90,7 +91,7 @@ class ChromaRetriever:
         """doc_version strings of superseded documents, read from the collection and
         cached for a minute (a re-index is rare; a query is not)."""
         fetched_at, versions = self._old
-        if time.monotonic() - fetched_at < 60:
+        if fetched_at is not None and time.monotonic() - fetched_at < 60:
             return versions
         try:
             got = self.collection().get(where={"superseded": True}, include=["metadatas"])

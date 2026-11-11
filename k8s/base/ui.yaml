@@ -42,7 +42,8 @@ spec:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
           capabilities:
-            drop: ["ALL"]
+            drop:
+              - ALL
         volumeMounts:
         - name: tmp
           mountPath: /tmp
