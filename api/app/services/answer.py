@@ -20,10 +20,13 @@ from ..config import Settings
 from ..logjson import request_id_var
 from ..providers.llm.base import LLMProvider
 from ..providers.llm.errors import GenerationError
+from ..providers.llm.prompt import build_messages
 from ..retrieval.base import Retriever
 from ..schemas import Answer, AskResponse, Passage, RetrievedRef
 from . import telemetry
 from .grounding import ABSTAIN_TEXT, FALLBACK_TEXT, split_citations
+from .guardrails import apply_rail, scan_question
+from .trace import Trace, prompt_hash
 
 log = logging.getLogger("rahbar.answer")
 
@@ -78,50 +81,106 @@ def _generate_validated(question: str, usable: list[Passage], retrieved: list[Pa
     return None
 
 
+def _retrieval_detail(passages: list[Passage], info: dict) -> dict:  # type: ignore[type-arg]
+    final = info.get("final_scores", {})
+    return {
+        "filters": info.get("filters"), "exact_terms": info.get("exact_terms"),
+        "candidates_fetched": info.get("candidates_fetched"),
+        "order_by_similarity": info.get("order_by_similarity"),
+        "reranked_order": info.get("reranked_order", [p.chunk_id for p in passages]),
+        "retrieved": [{"chunk_id": p.chunk_id, "document_id": p.source, "section": p.section,
+                       "page": p.page, "doc_version": p.doc_version, "superseded": p.superseded,
+                       "similarity": round(p.score, 4), "final_score": final.get(p.chunk_id)}
+                      for p in passages],
+    }
+
+
 def answer_question(
     question: str, retriever: Retriever, provider: LLMProvider, settings: Settings,
     cache: SemanticCache | None = None, follow_up: bool = False,
 ) -> AskResponse:
+    trace = Trace(question, settings)
+    trace.guardrails(scan_question(question))
+    for action in trace.rec["guardrail_actions"]:
+        telemetry.INJECTION_FLAGS.labels(where=str(action["where"])).inc()
+
     if cache is not None and not follow_up:
+        t = time.perf_counter()
         hit = cache.lookup(question)
+        trace.stage("cache", time.perf_counter() - t)
         if hit is not None:
             telemetry.CACHE_HITS.inc()
-            return hit.model_copy(update={"request_id": request_id_var.get()})
+            trace.set(cache="hit")
+            trace.set(retrieval={"retrieved": [r.model_dump() for r in hit.retrieved],
+                                 "note": "served from the semantic cache; no retrieval ran"})
+            return trace.finish(hit.model_copy(update={"request_id": request_id_var.get()}),
+                                "cache_hit")
         telemetry.CACHE_MISSES.inc()
+        trace.set(cache="miss")
 
     started = time.perf_counter()
+    info: dict = {}  # type: ignore[type-arg]
     try:
-        passages = retriever.retrieve(question, k=settings.top_k)
+        with_info = getattr(retriever, "retrieve_with_info", None)
+        if with_info is not None:
+            passages, info = with_info(question, k=settings.top_k)
+        else:
+            passages = retriever.retrieve(question, k=settings.top_k)
     except Exception as exc:   # Chroma or the embedder is down: a safe answer, never a 500
         log.error("retrieval failed", extra={"error": repr(exc)[:300]})
         telemetry.FALLBACKS.labels(reason="retrieval").inc()
-        return _response(provider, [], FALLBACK_TEXT, False)
+        trace.stage("retrieval", time.perf_counter() - started)
+        trace.set(retrieval={"error": repr(exc)[:300]})
+        return trace.finish(_response(provider, [], FALLBACK_TEXT, False), "fallback_retrieval")
     finally:
         telemetry.RETRIEVAL_SECONDS.observe(time.perf_counter() - started)
+    trace.stage("retrieval", time.perf_counter() - started)
+    trace.set(retrieval=_retrieval_detail(passages, info))
+    meta = info.get("collection_metadata") or {}
+    if meta:
+        trace.rec["collection"].update({"version": meta.get("index_id"), "metadata": meta})
+        trace.rec["embedding"].update({"index_model": meta.get("embed_model"),
+                                       "dimension": meta.get("dimension")})
+    if passages:
+        telemetry.TOP1_SIMILARITY.observe(max(p.score for p in passages))
 
-    usable = [p for p in passages if p.score >= settings.relevance_floor]
+    above_floor = [p for p in passages if p.score >= settings.relevance_floor]
+    rail = apply_rail(above_floor, settings.injection_rail)
+    trace.guardrails(rail.actions)
+    for action in rail.actions:
+        if action["action"] in ("flagged", "dropped"):
+            telemetry.INJECTION_FLAGS.labels(where="passage").inc()
+    usable = rail.usable
     base_log = {"retriever": retriever.name, "provider": provider.name,
                 "top_k": settings.top_k, "chunk_ids": [p.chunk_id for p in passages],
                 "scores": [round(p.score, 4) for p in passages],
                 "relevance_floor": settings.relevance_floor}
 
     if not usable:
-        telemetry.ABSTENTIONS.labels(reason="below_floor").inc()
+        reason = "below_floor" if not above_floor else "guardrail"
+        telemetry.ABSTENTIONS.labels(reason=reason).inc()
         log.info("answered", extra={**base_log, "answered_from_context": False,
-                                    "abstention": "below_floor"})
-        return _response(provider, passages, ABSTAIN_TEXT, False)
+                                    "abstention": reason})
+        return trace.finish(_response(provider, passages, ABSTAIN_TEXT, False),
+                            f"abstain_{reason}")
 
+    messages = build_messages(question, usable)
+    trace.set(prompt=messages, prompt_hash=prompt_hash(messages),
+              prompt_chunk_ids=[p.chunk_id for p in usable])
+    t = time.perf_counter()
     answer = _generate_validated(question, usable, passages, provider)
+    trace.stage("generate_validate", time.perf_counter() - t)
     if answer is None:
         telemetry.FALLBACKS.labels(reason="validation").inc()
         log.info("answered", extra={**base_log, "answered_from_context": False,
                                     "fallback": "validation"})
-        return _response(provider, passages, FALLBACK_TEXT, False)
+        return trace.finish(_response(provider, passages, FALLBACK_TEXT, False),
+                            "fallback_validation")
     if not answer.answered_from_context:
         telemetry.ABSTENTIONS.labels(reason="model").inc()
         log.info("answered", extra={**base_log, "answered_from_context": False,
                                     "abstention": "model"})
-        return _response(provider, passages, ABSTAIN_TEXT, False)
+        return trace.finish(_response(provider, passages, ABSTAIN_TEXT, False), "abstain_model")
 
     response = _response(provider, passages, answer.answer, True,
                          confidence=answer.confidence, citations=answer.citations)
@@ -129,4 +188,4 @@ def answer_question(
                                 "citations": len(answer.citations)})
     if cache is not None and not follow_up:   # only grounded, validated answers are cached
         cache.store(question, response)
-    return response
+    return trace.finish(response, "answered")

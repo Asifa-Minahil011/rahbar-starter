@@ -49,6 +49,12 @@ class Settings:
     hosted_base_url: str = ""        # e.g. an OpenAI-compatible endpoint
     llm_api_key: str = field(default="", repr=False)   # from the Secret; never log it
 
+    # RAGOps (Assignment 3). One JSON line per query goes to stdout and, when set, to this file.
+    # The default here is "" so unit tests write nothing; get_settings() defaults to a real path.
+    trace_file: str = ""
+    # INJECTION_RAIL: drop = keep flagged passages out of the prompt, flag = log only, off = nothing
+    injection_rail: str = "drop"
+
     log_level: str = "INFO"
 
 
@@ -71,5 +77,7 @@ def get_settings() -> Settings:
         ollama_url=os.environ.get("OLLAMA_URL", "http://host.minikube.internal:11434"),
         hosted_base_url=os.environ.get("HOSTED_BASE_URL", ""),
         llm_api_key=os.environ.get("LLM_API_KEY", ""),
+        trace_file=os.environ.get("TRACE_FILE", "traces/traces.jsonl"),
+        injection_rail=os.environ.get("INJECTION_RAIL", "drop").lower(),
         log_level=os.environ.get("LOG_LEVEL", "INFO"),
     )
