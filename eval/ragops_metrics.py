@@ -65,6 +65,10 @@ def ndcg_at_k(relevant: list[dict[str, Any]], retrieved: list[dict[str, Any]], k
     return dcg / ideal if ideal else 0.0
 
 
+def recall_at_5_value(row: dict[str, Any]) -> float | None:
+    return recall_at_k(row["relevant"], row["retrieved"], 5)
+
+
 def mean(values: list[float | None]) -> float | None:
     clean = [v for v in values if v is not None]
     return round(sum(clean) / len(clean), 4) if clean else None

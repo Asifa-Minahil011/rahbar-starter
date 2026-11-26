@@ -190,7 +190,17 @@ def component_level(args: argparse.Namespace, client: httpx.Client, golden: list
         if q["category"] == "unanswerable":
             got = retrieve(client, args, q["question"])["retrieved"]
             unans.append({"id": q["id"], "top1_similarity": round(got[0]["score"], 4) if got else None})
-    return {"top_k": top_k, "overall": clean, "by_category": grouped(clean_rows, "category"),
+    per_question = []
+    for r_clean, r_noisy in zip(clean_rows, noisy_rows):
+        ret = r_clean["retrieved"]
+        flags = M.relevance_vector(r_clean["relevant"], ret)
+        per_question.append({
+            "id": r_clean["q"]["id"], "recall_at_5": M.recall_at_5_value(r_clean), "first_hit_rank":
+            (flags.index(1) + 1) if 1 in flags else None,
+            "top1": ({"source": ret[0]["source"], "section": ret[0]["section"], "score": round(ret[0]["score"], 4)}
+                     if ret else None),
+            "sources": sorted({x["source"] for x in ret})})
+    return {"top_k": top_k, "per_question": per_question, "overall": clean, "by_category": grouped(clean_rows, "category"),
             "by_kind": grouped(clean_rows, "kind"),
             "noise": {"kind": "typos", "rate": args.noise_rate, "seed": args.seed, "overall": noisy_s,
                       "delta": delta, "queries_changed": changed},
@@ -287,7 +297,11 @@ def e2e_level(args: argparse.Namespace, client: httpx.Client, golden: list[dict[
     first = next((traces[r["resp"]["request_id"]] for r in results if r["resp"].get("request_id") in traces), None)
     if first:
         pipeline = {"model": first.get("model"), "embedding": first.get("embedding"), "collection": first.get("collection")}
+    per_question = [{"id": r["q"]["id"], "category": r["q"]["category"],
+                     "answered_from_context": r["resp"].get("answered_from_context"),
+                     "seconds": round(r["seconds"], 1), "request_id": r["resp"].get("request_id")} for r in results]
     return {
+        "per_question": per_question,
         "questions": len(results), "answerable_answered_rate": M.mean([1.0 if r in answered else 0.0 for r in answerable]),
         "over_abstention_rate": M.mean([0.0 if r in answered else 1.0 for r in answerable]),
         "answer_match_rate": M.mean([1.0 if h else 0.0 for h in hits]), "answer_match_n": len(hits),
@@ -327,7 +341,8 @@ def flatten(res: dict[str, Any]) -> dict[str, Any]:
                  faithfulness_lexical=e["faithfulness_lexical"], faithfulness_judge=e["faithfulness_judge"],
                  faithfulness=e["faithfulness_judge"] if e["faithfulness_judge"] is not None else e["faithfulness_lexical"],
                  latency_p50_ms=e["latency_ms"]["p50"], latency_p95_ms=e["latency_ms"]["p95"],
-                 judge_agreement=e["judge_vs_hand"].get("agreement"))
+                 judge_agreement=e["judge_vs_hand"].get("agreement"),
+                 injection_obeyed_count=len(e["injection_obeyed"]))
     return f
 
 
