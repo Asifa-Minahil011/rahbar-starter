@@ -91,7 +91,7 @@ def summarise(records: list[dict[str, Any]]) -> dict[str, Any]:
     flags: dict[str, int] = {}
     for r in records:
         for a in r.get("guardrail_actions") or []:
-            if a.get("action") in ("flagged", "dropped"):
+            if a.get("action") in ("flagged", "dropped", "redacted"):
                 key = f"{a.get('rail')}:{a.get('action')}@{'question' if a.get('where') == 'question' else 'passage'}"
                 flags[key] = flags.get(key, 0) + 1
     return {

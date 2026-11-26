@@ -14,8 +14,11 @@ router = APIRouter(prefix="/api")
 @router.post("/ask", response_model=AskResponse)
 def ask(body: AskRequest, request: Request) -> AskResponse:
     state = request.app.state
+    # X-Bypass-Cache: 1 is for the evaluation suite: a cached answer would hide the very
+    # variation (and the model change) the suite is trying to measure.
+    bypass = request.headers.get("X-Bypass-Cache", "") not in ("", "0", "false")
     return answer_question(body.question, state.retriever, state.provider, state.settings,
-                           cache=get_cache(state))
+                           cache=None if bypass else get_cache(state))
 
 
 @router.post("/retrieve")

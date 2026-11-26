@@ -5,10 +5,14 @@ Two layers already existed: the prompt tells the model that passages are data, a
 a third, visible one: it scans every retrieved passage (and the question) for instruction
 phrases and returns the actions it took, so they can be written into the trace.
 
-INJECTION_RAIL=drop  flagged passages are kept out of the prompt (they still count as
-                     "retrieved" for evaluation)
-INJECTION_RAIL=flag  flagged passages stay in the prompt; the flag is only logged
-INJECTION_RAIL=off   the rail does nothing
+INJECTION_RAIL=redact  (default) only the offending sentence is replaced by a marker in the
+                       prompt copy of the passage; the rest of the chunk is kept, because a
+                       real rule and a planted line can sit in the same chunk
+INJECTION_RAIL=drop    the whole flagged passage is kept out of the prompt
+INJECTION_RAIL=flag    flagged passages stay in the prompt; the flag is only logged
+INJECTION_RAIL=off     the rail does nothing
+
+In every mode the passage still counts as "retrieved" for evaluation and in the trace.
 """
 
 from __future__ import annotations
@@ -30,6 +34,8 @@ INJECTION = re.compile(
     re.I,
 )
 DELIMITER = re.compile(r"</?\s*context\b", re.I)
+SENTENCES = re.compile(r"(?<=[.!?])\s+|\n+")
+REDACTED = "[removed by the retrieval rail: instruction-like text]"
 
 
 @dataclass
@@ -39,7 +45,7 @@ class RailResult:
 
     @property
     def flagged(self) -> int:
-        return sum(1 for a in self.actions if a["action"] in ("flagged", "dropped"))
+        return sum(1 for a in self.actions if a["action"] in ("flagged", "dropped", "redacted"))
 
 
 def scan_question(question: str) -> list[dict[str, object]]:
@@ -64,16 +70,29 @@ def apply_rail(passages: list[Passage], mode: str) -> RailResult:
         return result
     kept: list[Passage] = []
     for p in passages:
-        hit = INJECTION.search(p.text)
-        if hit is None:
+        if INJECTION.search(p.text) is None:
             kept.append(p)
             continue
-        dropped = mode == "drop"
-        result.actions.append({"rail": "injection_phrase", "where": p.chunk_id,
-                               "source": p.source, "section": p.section,
-                               "action": "dropped" if dropped else "flagged",
-                               "detail": f"matched: {hit.group(0)[:80]!r}"})
-        if not dropped:
+        hit = INJECTION.search(p.text)
+        detail = f"matched: {hit.group(0)[:80]!r}" if hit else ""
+        base = {"rail": "injection_phrase", "where": p.chunk_id, "source": p.source,
+                "section": p.section}
+        if mode == "drop":
+            result.actions.append({**base, "action": "dropped", "detail": detail})
+        elif mode == "flag":
+            result.actions.append({**base, "action": "flagged", "detail": detail})
             kept.append(p)
+        else:   # redact
+            pieces = SENTENCES.split(p.text)
+            clean = [x for x in pieces if x and not INJECTION.search(x)]
+            n_removed = sum(1 for x in pieces if x and INJECTION.search(x))
+            if sum(len(x) for x in clean) < 20:       # nothing useful would be left
+                result.actions.append({**base, "action": "dropped",
+                                       "detail": detail + "; nothing else in the chunk"})
+            else:
+                text = " ".join(REDACTED if INJECTION.search(x) else x for x in pieces if x)
+                result.actions.append({**base, "action": "redacted",
+                                       "detail": detail + f"; {n_removed} sentence(s) replaced"})
+                kept.append(p.model_copy(update={"text": text}))
     result.usable = kept
     return result

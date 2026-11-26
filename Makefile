@@ -13,7 +13,7 @@ INGRESS_IP ?= $(shell minikube ip 2>/dev/null)
 HOST ?= rahbar.local
 
 .DEFAULT_GOAL := help
-.PHONY: help install test lint dev cluster images apply secret index ask fetch eval eval-fixtures check
+.PHONY: help install test lint dev cluster images apply secret index ask fetch eval eval-fixtures check suite suite-fast golden-check
 
 help: ## list the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  make %-14s %s\n", $$1, $$2}'
@@ -76,3 +76,12 @@ eval-fixtures: ## score the CI fixture golden set against a local `make dev`
 
 check: ## run the submission checker
 	$(PY) scripts/check_submission.py
+
+suite: ## Part B: the whole three-level suite against a running API (API=http://localhost:8010)
+	$(BIN)/python eval/ragops_suite.py --api "$(or $(API),http://localhost:8010)" --judge --repeat 2 $(if $(TAG),--tag $(TAG),)
+
+suite-fast: ## Part B without the LLM (module + component levels only): minutes, not hours
+	$(BIN)/python eval/ragops_suite.py --api "$(or $(API),http://localhost:8010)" --retrieval-only $(if $(TAG),--tag $(TAG),)
+
+golden-check: ## check eval/golden.jsonl against the Assignment 3 rules
+	$(PY) scripts/golden_check.py

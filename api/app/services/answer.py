@@ -148,7 +148,7 @@ def answer_question(
     rail = apply_rail(above_floor, settings.injection_rail)
     trace.guardrails(rail.actions)
     for action in rail.actions:
-        if action["action"] in ("flagged", "dropped"):
+        if action["action"] in ("flagged", "dropped", "redacted"):
             telemetry.INJECTION_FLAGS.labels(where="passage").inc()
     usable = rail.usable
     base_log = {"retriever": retriever.name, "provider": provider.name,
