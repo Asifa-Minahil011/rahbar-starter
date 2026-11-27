@@ -78,3 +78,40 @@ def test_drift_report_lists_moved_metrics_and_changed_questions(tmp_path, monkey
     assert res["metrics_moved"] == {"recall_at_5": -0.2}
     assert res["questions_changed"][0]["id"] == "q01"
     assert any("batch-b.pdf" in n for n in res["questions_changed"][0]["notes"])
+
+
+def test_golden_draft_classifies_by_floor(tmp_path, monkeypatch):
+    gd = load("golden_draft")
+    cov = {"rows": [{"id": "L1", "query": "fee?", "covered": False}, {"id": "L2", "query": "wifi?", "covered": False},
+                    {"id": "L3", "query": "ok", "covered": True}]}
+    (tmp_path / "c.json").write_text(json.dumps(cov))
+    write_jsonl(tmp_path / "g.jsonl", [{"id": "q27"}])
+    hits = {"fee?": [{"score": 0.8, "source": "h.pdf", "section": "5.1", "page": 3, "text": "x"}],
+            "wifi?": [{"score": 0.5, "source": "h.pdf", "section": "1", "page": 1, "text": "y"}]}
+    monkeypatch.setattr(gd, "post", lambda api, path, body, host: {"retrieved": hits[body["question"]]})
+    args = ["g", "--api", "http://x", "--coverage", str(tmp_path / "c.json"), "--golden", str(tmp_path / "g.jsonl"),
+            "--drafts", str(tmp_path / "d.jsonl")]
+    monkeypatch.setattr(sys, "argv", args)
+    assert gd.main() == 0
+    d = [json.loads(x) for x in (tmp_path / "d.jsonl").read_text().splitlines()]
+    assert [x["id"] for x in d] == ["q28", "q29"]
+    assert d[0]["category"] == "answerable" and d[0]["relevant"][0]["section"] == "5.1"
+    assert d[1]["category"] == "unanswerable" and d[1]["must_abstain"]
+    # --append refuses until `expect` is filled in
+    monkeypatch.setattr(sys, "argv", args + ["--append", "L1"])
+    assert gd.main() == 2
+    d[0]["expect"] = "refund"
+    (tmp_path / "d.jsonl").write_text("".join(json.dumps(x) + "\n" for x in d))
+    assert gd.main() == 0
+    assert json.loads((tmp_path / "g.jsonl").read_text().splitlines()[-1])["question"] == "fee?"
+
+
+def test_show_chunk_finds_section_and_grep(tmp_path, monkeypatch, capsys):
+    sc = load("show_chunk")
+    (tmp_path / "rules.md").write_text("# Rules\n\n4.24 Students may not withdraw after the deadline.\n\n"
+                                       "5.1 Plagiarism is punished.\n")
+    monkeypatch.setattr(sys, "argv", ["s", "rules.md", "--grep", "withdraw", "--corpus", str(tmp_path)])
+    assert sc.main() == 0
+    assert "withdraw" in capsys.readouterr().out
+    monkeypatch.setattr(sys, "argv", ["s", "missing.md", "--corpus", str(tmp_path)])
+    assert sc.main() == 2

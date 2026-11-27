@@ -27,6 +27,7 @@ import json
 import os
 import random
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -69,19 +70,33 @@ def post_json(client: httpx.Client, url: str, body: dict[str, Any], retries: int
 
 
 def read_traces(path: Path) -> dict[str, dict[str, Any]]:
+    return parse_traces(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
+def parse_traces(text: str) -> dict[str, dict[str, Any]]:
+    """Trace records from JSON lines: a trace file, or `kubectl logs` of the API pods
+    (a trace sits inside the log line under "trace")."""
     out: dict[str, dict[str, Any]] = {}
-    if not path.exists():
-        return out
-    for line in path.read_text(encoding="utf-8").splitlines():
-        if line.startswith("{"):
-            try:
-                rec = json.loads(line)
-            except ValueError:
-                continue
-            rec = rec.get("trace", rec) if isinstance(rec.get("trace"), dict) else rec
-            if "trace_id" in rec:
-                out[rec["trace_id"]] = rec
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        rec = rec.get("trace", rec) if isinstance(rec.get("trace"), dict) else rec
+        if "trace_id" in rec:
+            out[rec["trace_id"]] = rec
     return out
+
+
+def traces_from_command(cmd: str) -> dict[str, dict[str, Any]]:
+    """Run a command that prints the API's trace lines (e.g. kubectl logs) and parse them."""
+    done = subprocess.run(shlex.split(cmd), capture_output=True, text=True, timeout=600, check=False)
+    if done.returncode != 0:
+        print(f"  (trace command failed: {done.stderr.strip()[:200]})")
+    return parse_traces(done.stdout)
 
 
 CONTEXT_BLOCK = re.compile(r"<context>\n\[\d+\][^\n]*\n(.*?)\n</context>", re.S)
@@ -239,6 +254,8 @@ def e2e_level(args: argparse.Namespace, client: httpx.Client, golden: list[dict[
         results.append({"q": q, "resp": resp, "seconds": time.perf_counter() - t})
         print(f"  {q['id']:<5} {results[-1]['seconds']:>7.1f}s  {q['question'][:58]}")
     traces = read_traces(Path(args.trace_file))
+    if args.trace_cmd:
+        traces.update(traces_from_command(args.trace_cmd))
 
     answerable = [r for r in results if r["q"]["category"] in ("answerable", "hard")]
     unans = [r for r in results if r["q"]["category"] == "unanswerable" or r["q"].get("must_abstain")]
@@ -432,6 +449,9 @@ def main() -> int:
     ap.add_argument("--judge-model", default=env("JUDGE_MODEL", env("LLM_MODEL", "llama3.2:3b")))
     ap.add_argument("--hand-labels", type=Path, default=HERE / "judge_labels.jsonl")
     ap.add_argument("--trace-file", default=env("TRACE_FILE", "traces/traces.jsonl"))
+    ap.add_argument("--trace-cmd", default=env("TRACE_CMD", ""),
+                    help="command that prints the API's trace lines, e.g. "
+                         "'kubectl logs -n rahbar -l app=api --tail=-1' (run once, after all answers)")
     ap.add_argument("--ollama", default=env("OLLAMA_URL", "http://localhost:11434"))
     ap.add_argument("--embed-model", default=env("EMBED_MODEL", "nomic-embed-text"))
     ap.add_argument("--chroma-host", default=env("CHROMA_HOST", "localhost"))

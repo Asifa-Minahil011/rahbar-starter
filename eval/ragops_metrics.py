@@ -59,7 +59,15 @@ def ndcg_at_k(relevant: list[dict[str, Any]], retrieved: list[dict[str, Any]], k
     """Binary-gain nDCG. The ideal ranking puts min(#relevant sections, k) hits first."""
     if not relevant:
         return None
-    gains = relevance_vector(relevant, retrieved)[:k]
+    # A relevant section can earn its gain once: two chunks of the same clause (it can span
+    # pages) must not count twice, or nDCG would pass 1.
+    open_rel = list(relevant)
+    gains = []
+    for ref in retrieved[:k]:
+        hit = next((r for r in open_rel if is_relevant(r, ref)), None)
+        if hit is not None:
+            open_rel.remove(hit)
+        gains.append(int(hit is not None))
     dcg = sum(g / math.log2(i + 2) for i, g in enumerate(gains))
     ideal = sum(1 / math.log2(i + 2) for i in range(min(len(relevant), k)))
     return dcg / ideal if ideal else 0.0

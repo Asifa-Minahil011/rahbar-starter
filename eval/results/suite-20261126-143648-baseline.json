@@ -1,0 +1,592 @@
+{
+  "module": {
+    "model": "nomic-embed-text",
+    "dimension": 768,
+    "paraphrase": {
+      "pairs": 15,
+      "mean_cosine": 0.8983,
+      "min": 0.8141
+    },
+    "unrelated": {
+      "pairs": 15,
+      "mean_cosine": 0.5613,
+      "max": 0.6304
+    },
+    "gap": 0.337,
+    "separable": true,
+    "time_per_chunk_ms": {
+      "mean": 105.4,
+      "p50": 105.33,
+      "p95": 121.499,
+      "n": 15,
+      "source": "fixture sentences (Chroma not reachable)"
+    },
+    "determinism": {
+      "texts": 5,
+      "max_abs_diff": 0.0,
+      "max_cosine_gap": 2.220446049250313e-16
+    }
+  },
+  "component": {
+    "top_k": 5,
+    "per_question": [
+      {
+        "id": "q01",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "6.6 A student will be allowed to repeat",
+          "score": 0.8526
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q02",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "2.6 CGPA is calculated as the weighted average",
+          "score": 0.8346
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "grading-page.html"
+        ]
+      },
+      {
+        "id": "q03",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "5.25 Rechecking fee will be refunded if there",
+          "score": 0.8512
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q04",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "4.23 Application for withdrawal from a course must",
+          "score": 0.8682
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "prospectus-2026-academic-rules-and-regulations.pdf"
+        ]
+      },
+      {
+        "id": "q05",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "4.4 A student under academic warning or probation:",
+          "score": 0.8862
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "grading-page.html"
+        ]
+      },
+      {
+        "id": "q06",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "7.2 Students earning high CGPA as below would",
+          "score": 0.8087
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q07",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "1.22 Failure to meet attendance requirements in a",
+          "score": 0.8599
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q08",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "fee-structure-page.html",
+          "section": "Tuition Fee (w.e.f. Fall 2026 semester)",
+          "score": 0.8033
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "fee-structure-page.html",
+          "student-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q09",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "fee-structure-page.html",
+          "section": "Fee Refund Policy",
+          "score": 0.7749
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "fee-structure-page.html",
+          "student-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q10",
+        "recall_at_5": 0.0,
+        "first_hit_rank": null,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "7.12 If there are more than one student",
+          "score": 0.7
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "prospectus-2026-academic-rules-and-regulations.pdf"
+        ]
+      },
+      {
+        "id": "q11",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "4.24 Students are not allowed to withdraw from",
+          "score": 0.7788
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q14",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 2,
+        "top1": {
+          "source": "undergraduate-academic-rules-aug-2023.pdf",
+          "section": "1.21 Students are required to maintain 100% attendance",
+          "score": 0.7187
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "undergraduate-academic-rules-aug-2023.pdf"
+        ]
+      },
+      {
+        "id": "q15",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "1.6 A regular semester is spread over 16",
+          "score": 0.8093
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "prospectus-2026-academic-rules-and-regulations.pdf"
+        ]
+      },
+      {
+        "id": "q16",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "6.1 Summer semester is an 8-week semester and",
+          "score": 0.8689
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q17",
+        "recall_at_5": 0.0,
+        "first_hit_rank": null,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "6.3 Students can repeat only such courses, in",
+          "score": 0.7663
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "grading-page.html",
+          "prospectus-2026-academic-rules-and-regulations.pdf"
+        ]
+      },
+      {
+        "id": "q18",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "5.25 Rechecking fee will be refunded if there",
+          "score": 0.8319
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "fee-structure-page.html"
+        ]
+      },
+      {
+        "id": "q19",
+        "recall_at_5": 0.0,
+        "first_hit_rank": null,
+        "top1": {
+          "source": "student-handbook-jun-2026.pdf",
+          "section": "7. Students who have missed classes due to",
+          "score": 0.7311
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "student-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q20",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 2,
+        "top1": {
+          "source": "prospectus-2026-academic-rules-and-regulations.pdf",
+          "section": "Page 1",
+          "score": 0.7577
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "prospectus-2026-academic-rules-and-regulations.pdf"
+        ]
+      },
+      {
+        "id": "q21",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "6.1 Summer semester is an 8-week semester and",
+          "score": 0.7757
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q22",
+        "recall_at_5": 0.0,
+        "first_hit_rank": null,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "1.12 A 4-credit hour course, for example, having",
+          "score": 0.7735
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q23",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 5,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "4. Registration",
+          "score": 0.7803
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "prospectus-2026-academic-rules-and-regulations.pdf"
+        ]
+      },
+      {
+        "id": "q32",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "fee-structure-page.html",
+          "section": "Fee Refund Policy",
+          "score": 0.7754
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "fee-structure-page.html",
+          "prospectus-2026-academic-rules-and-regulations.pdf",
+          "student-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q46",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "grading-page.html",
+          "section": "Incomplete Course",
+          "score": 0.7997
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "grading-page.html",
+          "prospectus-2026-academic-rules-and-regulations.pdf"
+        ]
+      },
+      {
+        "id": "q49",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "1.23 The minimum duration of a Bachelor\u2019s degree",
+          "score": 0.8076
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "prospectus-2026-academic-rules-and-regulations.pdf"
+        ]
+      },
+      {
+        "id": "q29",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "1.21 Students are required to maintain 100% attendance",
+          "score": 0.7457
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q30",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "4.24 Students are not allowed to withdraw from",
+          "score": 0.7989
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf"
+        ]
+      },
+      {
+        "id": "q33",
+        "recall_at_5": 1.0,
+        "first_hit_rank": 1,
+        "top1": {
+          "source": "academic-rules-handbook-jun-2026.pdf",
+          "section": "4.18 A student may request freezing of his/her",
+          "score": 0.8311
+        },
+        "sources": [
+          "academic-rules-handbook-jun-2026.pdf",
+          "prospectus-2026-academic-rules-and-regulations.pdf"
+        ]
+      }
+    ],
+    "overall": {
+      "recall_at_3": 0.8148,
+      "recall_at_5": 0.8519,
+      "mrr": 0.7852,
+      "ndcg_at_5": 1.1171,
+      "n": 27
+    },
+    "by_category": {
+      "answerable": {
+        "recall_at_3": 0.95,
+        "recall_at_5": 0.95,
+        "mrr": 0.925,
+        "ndcg_at_5": 1.3007,
+        "n": 20
+      },
+      "hard": {
+        "recall_at_3": 0.4286,
+        "recall_at_5": 0.5714,
+        "mrr": 0.3857,
+        "ndcg_at_5": 0.5927,
+        "n": 7
+      }
+    },
+    "by_kind": {
+      "exact": {
+        "recall_at_3": 0.5,
+        "recall_at_5": 0.5,
+        "mrr": 0.5,
+        "ndcg_at_5": 0.8155,
+        "n": 2
+      },
+      "injection": {
+        "recall_at_3": 1.0,
+        "recall_at_5": 1.0,
+        "mrr": 0.5,
+        "ndcg_at_5": 1.1309,
+        "n": 1
+      },
+      "ordinary": {
+        "recall_at_3": 1.0,
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_5": 1.3327,
+        "n": 15
+      },
+      "paraphrase": {
+        "recall_at_3": 0.4286,
+        "recall_at_5": 0.5714,
+        "mrr": 0.3857,
+        "ndcg_at_5": 0.5927,
+        "n": 7
+      },
+      "version": {
+        "recall_at_3": 1.0,
+        "recall_at_5": 1.0,
+        "mrr": 1.0,
+        "ndcg_at_5": 1.6309,
+        "n": 2
+      }
+    },
+    "noise": {
+      "kind": "typos",
+      "rate": 0.15,
+      "seed": 42,
+      "overall": {
+        "recall_at_3": 0.7407,
+        "recall_at_5": 0.7778,
+        "mrr": 0.7049,
+        "ndcg_at_5": 1.007,
+        "n": 27
+      },
+      "delta": {
+        "recall_at_3": -0.0741,
+        "recall_at_5": -0.0741,
+        "mrr": -0.0803,
+        "ndcg_at_5": -0.1101
+      },
+      "queries_changed": [
+        {
+          "id": "q23",
+          "clean": "What is the procedure to drop a course I have registered for?",
+          "noisy": "What is the procedure to drop a couse I have registered for?",
+          "recall_at_5": [
+            1.0,
+            0.0
+          ]
+        },
+        {
+          "id": "q29",
+          "clean": "what happens if my attendance is below 80 percent",
+          "noisy": "what happens if my atttendance is below 80 percent",
+          "recall_at_5": [
+            1.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    "unanswerable_top1": [
+      {
+        "id": "q12",
+        "top1_similarity": 0.6548
+      },
+      {
+        "id": "q13",
+        "top1_similarity": 0.595
+      },
+      {
+        "id": "q24",
+        "top1_similarity": 0.6485
+      },
+      {
+        "id": "q25",
+        "top1_similarity": 0.7512
+      },
+      {
+        "id": "q26",
+        "top1_similarity": 0.6005
+      },
+      {
+        "id": "q27",
+        "top1_similarity": 0.72
+      },
+      {
+        "id": "q51",
+        "top1_similarity": 0.5664
+      },
+      {
+        "id": "q52",
+        "top1_similarity": 0.6425
+      },
+      {
+        "id": "q53",
+        "top1_similarity": 0.6429
+      },
+      {
+        "id": "q55",
+        "top1_similarity": 0.5989
+      },
+      {
+        "id": "q56",
+        "top1_similarity": 0.6664
+      },
+      {
+        "id": "q57",
+        "top1_similarity": 0.6358
+      },
+      {
+        "id": "q59",
+        "top1_similarity": 0.6562
+      },
+      {
+        "id": "q61",
+        "top1_similarity": 0.6574
+      }
+    ]
+  },
+  "flat": {
+    "embed_gap": 0.337,
+    "embed_mean_paraphrase": 0.8983,
+    "embed_mean_unrelated": 0.5613,
+    "embed_ms_per_chunk": 105.4,
+    "embed_determinism_max_abs_diff": 0.0,
+    "recall_at_3": 0.8148,
+    "recall_at_5": 0.8519,
+    "mrr": 0.7852,
+    "ndcg_at_5": 1.1171,
+    "noise_recall_at_5": 0.7778,
+    "noise_recall_at_5_delta": -0.0741
+  },
+  "meta": {
+    "timestamp": "20261126-143648",
+    "tag": "baseline",
+    "api": "http://localhost:8010",
+    "git_sha": "1db922c",
+    "seed": 42,
+    "golden": "/home/maha/rahbar-a3/eval/golden.jsonl",
+    "golden_sha256": "c797688b50234cbe",
+    "questions": 41,
+    "levels": "module,component",
+    "repeat": 1,
+    "judge_model": null,
+    "cache_bypassed": true
+  }
+}

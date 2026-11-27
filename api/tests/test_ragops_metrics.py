@@ -85,3 +85,21 @@ def test_agreement_and_kappa() -> None:
 
 def test_metric_differences_only_compares_numbers_present_in_both() -> None:
     assert m.metric_differences({"a": 1.0, "b": 0.5, "c": "x"}, {"a": 0.75, "b": 0.5}) == {"a": 0.25, "b": 0.0}
+
+
+def test_ndcg_never_exceeds_one_when_a_clause_spans_two_chunks() -> None:
+    """Regression: two retrieved chunks of the same relevant section gave nDCG 1.17."""
+    got = m.ndcg_at_k(REL, [ref("5.4 W"), ref("5.4 W more text"), ref("9")], 5)
+    assert got == 1.0
+
+
+def test_parse_traces_reads_kubectl_log_lines_and_trace_files() -> None:
+    import json as _json
+    import sys as _sys
+    _sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parents[2] / "eval"))
+    import ragops_suite as suite
+
+    log_line = _json.dumps({"msg": "trace", "trace": {"trace_id": "abc", "prompt": []}})
+    file_line = _json.dumps({"trace_id": "def"})
+    got = suite.parse_traces("\n".join(["not json", log_line, '{"msg": "x"}', file_line, "{broken"]))
+    assert set(got) == {"abc", "def"}
