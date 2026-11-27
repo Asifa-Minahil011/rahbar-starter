@@ -316,6 +316,8 @@ def e2e_level(args: argparse.Namespace, client: httpx.Client, golden: list[dict[
         pipeline = {"model": first.get("model"), "embedding": first.get("embedding"), "collection": first.get("collection")}
     per_question = [{"id": r["q"]["id"], "category": r["q"]["category"],
                      "answered_from_context": r["resp"].get("answered_from_context"),
+                     "outcome": (traces.get(r["resp"].get("request_id", "")) or {}).get("outcome"),
+                     "answer": (r["resp"].get("answer") or "")[:140],
                      "seconds": round(r["seconds"], 1), "request_id": r["resp"].get("request_id")} for r in results]
     return {
         "per_question": per_question,
@@ -442,6 +444,7 @@ def main() -> int:
     ap.add_argument("--levels", default="module,component,e2e")
     ap.add_argument("--retrieval-only", action="store_true", help="same as --levels module,component")
     ap.add_argument("--limit", type=int, help="use only the first N golden questions (smoke test)")
+    ap.add_argument("--ids", default="", help="comma-separated golden ids to run, e.g. q01,q15 (re-run suspects)")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--repeat", type=int, default=1, help="run the suite N times (stochasticity test)")
     ap.add_argument("--noise-rate", type=float, default=0.15)
@@ -463,6 +466,9 @@ def main() -> int:
     random.seed(args.seed)
 
     golden = load_golden(args.golden)
+    if args.ids:
+        wanted = {x.strip() for x in args.ids.split(",") if x.strip()}
+        golden = [g for g in golden if g["id"] in wanted]
     if args.limit:
         golden = golden[: args.limit]
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d-%H%M%S")

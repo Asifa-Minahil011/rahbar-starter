@@ -49,9 +49,12 @@ def test_quality_fails_on_empty_pages_and_on_garbled_text() -> None:
     assert by_name(r_garbled)["quality"] == "fail"
 
 
-def test_quality_warns_on_a_mostly_scanned_document_but_keeps_it() -> None:
-    (r,) = verify([doc(ocr=True)])
-    assert by_name(r)["quality"] == "fail"  # every page OCR'd: above the 80% limit
+def test_a_clean_scan_is_kept_but_a_thin_scan_is_quarantined() -> None:
+    (clean_scan,) = verify([doc(ocr=True)])           # every page OCR'd, plenty of clean text
+    assert by_name(clean_scan)["quality"] == "warn" and clean_scan.decision == "accept"
+    thin = Document("t.pdf", "2026", False, [Page("t.pdf", i, "word " * 8, True) for i in range(1, 5)])
+    (r_thin,) = verify([thin])
+    assert by_name(r_thin)["quality"] == "fail"       # OCR'd, and the OCR found almost nothing
     mixed = Document("m.pdf", "2026", False,
                      [Page("m.pdf", 1, GOOD, True), Page("m.pdf", 2, GOOD, False), Page("m.pdf", 3, GOOD, False)])
     (m,) = verify([mixed])

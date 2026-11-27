@@ -1,0 +1,306 @@
+{
+  "run": "20261127-073710",
+  "thresholds": {
+    "min_total_chars": 100,
+    "max_empty_page_share": 0.5,
+    "warn_empty_page_share": 0.2,
+    "max_garbled_share": 0.1,
+    "warn_garbled_share": 0.03,
+    "max_ocr_share": 0.8,
+    "warn_ocr_share": 0.3,
+    "warn_age_years": 3,
+    "fail_age_years": 8,
+    "near_dup_fail": 0.985,
+    "near_dup_warn": 0.95
+  },
+  "documents": 9,
+  "accepted": 7,
+  "quarantined": 2,
+  "accepted_with_warnings": 1,
+  "corpus_problems": [],
+  "reports": [
+    {
+      "source": "undergraduate-academic-rules-aug-2023.pdf",
+      "doc_version": "2023-08",
+      "superseded": true,
+      "pages": 26,
+      "chars": 29391,
+      "checks": [
+        {
+          "name": "quality",
+          "status": "fail",
+          "detail": "empty pages 4%, OCR pages 92%, garbled chars 0.0%"
+        },
+        {
+          "name": "completeness",
+          "status": "pass",
+          "detail": "version 2023-08, 26 page(s), 29391 characters"
+        },
+        {
+          "name": "recency",
+          "status": "warn",
+          "detail": "superseded version from 2023: kept, filtered at query time"
+        },
+        {
+          "name": "uniqueness",
+          "status": "pass",
+          "detail": "no exact duplicate; near-duplicate check skipped (no embeddings) [near-duplicate check skipped: embedding failed (RuntimeError(\"embedding failed at batch 0 (model nomic-embed-text at http://host.minikube.internal:11434/api/embed): ConnectError('[Errno -2] Name or service not known')\"))]"
+        }
+      ],
+      "decision": "quarantine",
+      "reasons": [
+        "quality: empty pages 4%, OCR pages 92%, garbled chars 0.0%"
+      ]
+    },
+    {
+      "source": "academic-rules-handbook-jun-2026.pdf",
+      "doc_version": "2026-06",
+      "superseded": false,
+      "pages": 58,
+      "chars": 94532,
+      "checks": [
+        {
+          "name": "quality",
+          "status": "pass",
+          "detail": "empty pages 5%, OCR pages 9%, garbled chars 0.0%"
+        },
+        {
+          "name": "completeness",
+          "status": "pass",
+          "detail": "version 2026-06, 58 page(s), 94532 characters"
+        },
+        {
+          "name": "recency",
+          "status": "pass",
+          "detail": "version year 2026, 0 year(s) old"
+        },
+        {
+          "name": "uniqueness",
+          "status": "pass",
+          "detail": "no exact duplicate; near-duplicate check skipped (no embeddings) [near-duplicate check skipped: embedding failed (RuntimeError(\"embedding failed at batch 0 (model nomic-embed-text at http://host.minikube.internal:11434/api/embed): ConnectError('[Errno -2] Name or service not known')\"))]"
+        }
+      ],
+      "decision": "accept",
+      "reasons": []
+    },
+    {
+      "source": "prospectus-2026-academic-rules-and-regulations.pdf",
+      "doc_version": "2026",
+      "superseded": false,
+      "pages": 5,
+      "chars": 21015,
+      "checks": [
+        {
+          "name": "quality",
+          "status": "pass",
+          "detail": "empty pages 0%, OCR pages 0%, garbled chars 0.0%"
+        },
+        {
+          "name": "completeness",
+          "status": "pass",
+          "detail": "version 2026, 5 page(s), 21015 characters"
+        },
+        {
+          "name": "recency",
+          "status": "pass",
+          "detail": "version year 2026, 0 year(s) old"
+        },
+        {
+          "name": "uniqueness",
+          "status": "pass",
+          "detail": "no exact duplicate; near-duplicate check skipped (no embeddings) [near-duplicate check skipped: embedding failed (RuntimeError(\"embedding failed at batch 0 (model nomic-embed-text at http://host.minikube.internal:11434/api/embed): ConnectError('[Errno -2] Name or service not known')\"))]"
+        }
+      ],
+      "decision": "accept",
+      "reasons": []
+    },
+    {
+      "source": "student-handbook-jun-2026.pdf",
+      "doc_version": "2026-06",
+      "superseded": false,
+      "pages": 64,
+      "chars": 138227,
+      "checks": [
+        {
+          "name": "quality",
+          "status": "pass",
+          "detail": "empty pages 3%, OCR pages 6%, garbled chars 0.0%"
+        },
+        {
+          "name": "completeness",
+          "status": "pass",
+          "detail": "version 2026-06, 64 page(s), 138227 characters"
+        },
+        {
+          "name": "recency",
+          "status": "pass",
+          "detail": "version year 2026, 0 year(s) old"
+        },
+        {
+          "name": "uniqueness",
+          "status": "pass",
+          "detail": "no exact duplicate; near-duplicate check skipped (no embeddings) [near-duplicate check skipped: embedding failed (RuntimeError(\"embedding failed at batch 0 (model nomic-embed-text at http://host.minikube.internal:11434/api/embed): ConnectError('[Errno -2] Name or service not known')\"))]"
+        }
+      ],
+      "decision": "accept",
+      "reasons": []
+    },
+    {
+      "source": "annual-report-2019-20.pdf",
+      "doc_version": "2019-20",
+      "superseded": false,
+      "pages": 33,
+      "chars": 51045,
+      "checks": [
+        {
+          "name": "quality",
+          "status": "pass",
+          "detail": "empty pages 3%, OCR pages 0%, garbled chars 0.0%"
+        },
+        {
+          "name": "completeness",
+          "status": "pass",
+          "detail": "version 2019-20, 33 page(s), 51045 characters"
+        },
+        {
+          "name": "recency",
+          "status": "warn",
+          "detail": "6 years old (warn above 3)"
+        },
+        {
+          "name": "uniqueness",
+          "status": "pass",
+          "detail": "no exact duplicate; near-duplicate check skipped (no embeddings) [near-duplicate check skipped: embedding failed (RuntimeError(\"embedding failed at batch 0 (model nomic-embed-text at http://host.minikube.internal:11434/api/embed): ConnectError('[Errno -2] Name or service not known')\"))]"
+        }
+      ],
+      "decision": "accept",
+      "reasons": []
+    },
+    {
+      "source": "annual-report-2023-24.pdf",
+      "doc_version": "2023-24",
+      "superseded": false,
+      "pages": 85,
+      "chars": 203534,
+      "checks": [
+        {
+          "name": "quality",
+          "status": "pass",
+          "detail": "empty pages 0%, OCR pages 0%, garbled chars 0.0%"
+        },
+        {
+          "name": "completeness",
+          "status": "pass",
+          "detail": "version 2023-24, 85 page(s), 203534 characters"
+        },
+        {
+          "name": "recency",
+          "status": "pass",
+          "detail": "version year 2024, 2 year(s) old"
+        },
+        {
+          "name": "uniqueness",
+          "status": "pass",
+          "detail": "no exact duplicate; near-duplicate check skipped (no embeddings) [near-duplicate check skipped: embedding failed (RuntimeError(\"embedding failed at batch 0 (model nomic-embed-text at http://host.minikube.internal:11434/api/embed): ConnectError('[Errno -2] Name or service not known')\"))]"
+        }
+      ],
+      "decision": "accept",
+      "reasons": []
+    },
+    {
+      "source": "fee-structure-page.html",
+      "doc_version": "2026-27",
+      "superseded": false,
+      "pages": 1,
+      "chars": 4234,
+      "checks": [
+        {
+          "name": "quality",
+          "status": "pass",
+          "detail": "empty pages 0%, OCR pages 0%, garbled chars 0.0%"
+        },
+        {
+          "name": "completeness",
+          "status": "pass",
+          "detail": "version 2026-27, 1 page(s), 4234 characters"
+        },
+        {
+          "name": "recency",
+          "status": "pass",
+          "detail": "version year 2027, -1 year(s) old"
+        },
+        {
+          "name": "uniqueness",
+          "status": "pass",
+          "detail": "no exact duplicate; near-duplicate check skipped (no embeddings) [near-duplicate check skipped: embedding failed (RuntimeError(\"embedding failed at batch 0 (model nomic-embed-text at http://host.minikube.internal:11434/api/embed): ConnectError('[Errno -2] Name or service not known')\"))]"
+        }
+      ],
+      "decision": "accept",
+      "reasons": []
+    },
+    {
+      "source": "grading-page.html",
+      "doc_version": "2026",
+      "superseded": false,
+      "pages": 1,
+      "chars": 5785,
+      "checks": [
+        {
+          "name": "quality",
+          "status": "pass",
+          "detail": "empty pages 0%, OCR pages 0%, garbled chars 0.0%"
+        },
+        {
+          "name": "completeness",
+          "status": "pass",
+          "detail": "version 2026, 1 page(s), 5785 characters"
+        },
+        {
+          "name": "recency",
+          "status": "pass",
+          "detail": "version year 2026, 0 year(s) old"
+        },
+        {
+          "name": "uniqueness",
+          "status": "pass",
+          "detail": "no exact duplicate; near-duplicate check skipped (no embeddings) [near-duplicate check skipped: embedding failed (RuntimeError(\"embedding failed at batch 0 (model nomic-embed-text at http://host.minikube.internal:11434/api/embed): ConnectError('[Errno -2] Name or service not known')\"))]"
+        }
+      ],
+      "decision": "accept",
+      "reasons": []
+    },
+    {
+      "source": "faculty-entrepreneurship-and-technical-start-ups-policy.pdf",
+      "doc_version": "2022-05",
+      "superseded": false,
+      "pages": 8,
+      "chars": 11803,
+      "checks": [
+        {
+          "name": "quality",
+          "status": "fail",
+          "detail": "empty pages 0%, OCR pages 100%, garbled chars 0.0%"
+        },
+        {
+          "name": "completeness",
+          "status": "pass",
+          "detail": "version 2022-05, 8 page(s), 11803 characters"
+        },
+        {
+          "name": "recency",
+          "status": "warn",
+          "detail": "4 years old (warn above 3)"
+        },
+        {
+          "name": "uniqueness",
+          "status": "pass",
+          "detail": "no exact duplicate; near-duplicate check skipped (no embeddings) [near-duplicate check skipped: embedding failed (RuntimeError(\"embedding failed at batch 0 (model nomic-embed-text at http://host.minikube.internal:11434/api/embed): ConnectError('[Errno -2] Name or service not known')\"))]"
+        }
+      ],
+      "decision": "quarantine",
+      "reasons": [
+        "quality: empty pages 0%, OCR pages 100%, garbled chars 0.0%"
+      ]
+    }
+  ]
+}

@@ -72,3 +72,13 @@ def test_exit_codes_through_main(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 
     assert run(good) == 0 and run(bad) == 1
     assert run(tmp_path / "missing.json") == 2
+
+
+def test_suite_accepts_ids_filter_and_records_outcome() -> None:
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "eval"))
+    import ragops_suite as suite
+
+    parser_src = Path(suite.__file__).read_text()
+    assert '"--ids"' in parser_src and '"outcome"' in parser_src

@@ -57,7 +57,8 @@ class Thresholds:
     warn_empty_page_share: float = 0.2
     max_garbled_share: float = 0.10      # quality: replacement/control characters; fail above
     warn_garbled_share: float = 0.03
-    max_ocr_share: float = 0.8           # quality: scanned pages are noisy; fail above
+    max_ocr_share: float = 0.8           # quality: fail only if this many pages are OCR'd AND the OCR is thin
+    min_ocr_chars_per_page: int = 300    # ... i.e. fewer characters per page than this (OCR found little text)
     warn_ocr_share: float = 0.3
     warn_age_years: int = 3              # recency: current document older than this warns
     fail_age_years: int = 8              # ... and fails above this
@@ -74,6 +75,7 @@ class Thresholds:
             max_garbled_share=_env("VERIFY_MAX_GARBLED_SHARE", d.max_garbled_share),
             warn_garbled_share=_env("VERIFY_WARN_GARBLED_SHARE", d.warn_garbled_share),
             max_ocr_share=_env("VERIFY_MAX_OCR_SHARE", d.max_ocr_share),
+            min_ocr_chars_per_page=int(_env("VERIFY_MIN_OCR_CHARS_PER_PAGE", d.min_ocr_chars_per_page)),
             warn_ocr_share=_env("VERIFY_WARN_OCR_SHARE", d.warn_ocr_share),
             warn_age_years=int(_env("VERIFY_WARN_AGE_YEARS", d.warn_age_years)),
             fail_age_years=int(_env("VERIFY_FAIL_AGE_YEARS", d.fail_age_years)),
@@ -155,8 +157,13 @@ def check_quality(doc: Document, t: Thresholds) -> Check:
     ocr = sum(1 for p in doc.pages if p.ocr) / n
     text = full_text(doc)
     garbled = sum(1 for ch in text if ch == "�" or (ord(ch) < 32 and ch not in "\n\t\r")) / max(len(text), 1)
-    stats = f"empty pages {empty:.0%}, OCR pages {ocr:.0%}, garbled chars {garbled:.1%}"
-    if empty > t.max_empty_page_share or garbled > t.max_garbled_share or ocr > t.max_ocr_share:
+    density = len(text) / n
+    stats = (f"empty pages {empty:.0%}, OCR pages {ocr:.0%}, garbled chars {garbled:.1%}, "
+             f"{density:.0f} chars/page")
+    # A scan is not bad data; unreadable OCR is. Mostly-OCR fails only when the OCR also
+    # found little text. (The first run quarantined a clean 26-page scan: see the report.)
+    thin_scan = ocr > t.max_ocr_share and density < t.min_ocr_chars_per_page
+    if empty > t.max_empty_page_share or garbled > t.max_garbled_share or thin_scan:
         return Check("quality", "fail", stats)
     if empty > t.warn_empty_page_share or garbled > t.warn_garbled_share or ocr > t.warn_ocr_share:
         return Check("quality", "warn", stats)
