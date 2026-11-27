@@ -4,6 +4,7 @@ namespace: rahbar
 resources:
   - namespace.yaml
   - configmap.yaml
+  - datalake-pvc.yaml
   - redis.yaml
   - chroma.yaml
   - indexer-job.yaml

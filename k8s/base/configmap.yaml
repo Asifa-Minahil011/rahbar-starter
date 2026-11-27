@@ -6,9 +6,9 @@ metadata:
 data:
   # The embedding pin: api and indexer both read this one key (section 4.4).
   # The dummy index records dummy-768; switch to nomic-embed-text with the real pipeline.
-  EMBED_MODEL: "dummy-768"
-  RETRIEVER: "stub"
-  LLM_PROVIDER: "stub"
+  EMBED_MODEL: "nomic-embed-text"
+  RETRIEVER: "chroma"
+  LLM_PROVIDER: "ollama-host"
   CHROMA_HOST: "chroma"
   CHROMA_PORT: "8000"
   CHROMA_COLLECTION: "rahbar"
@@ -17,8 +17,9 @@ data:
   CHUNK_SIZE: "400"
   CHUNK_OVERLAP: "50"
   TOP_K: "5"
-  RELEVANCE_FLOOR: "0.5"
+  RELEVANCE_FLOOR: "0.68"
   CACHE_THRESHOLD: "0.95"
   # Facts and JSON belong at 0 to 0.3: low temperature keeps answers close to the evidence.
   TEMPERATURE: "0.2"
-  OLLAMA_URL: "http://host.minikube.internal:11434"
+  OLLAMA_URL: "http://172.25.112.1:11434"
+  LLM_MODEL: "llama3.2:3b"
