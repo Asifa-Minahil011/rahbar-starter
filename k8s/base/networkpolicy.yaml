@@ -147,7 +147,7 @@ spec:
   #   minikube ssh "grep host.minikube.internal /etc/hosts"
   - to:
     - ipBlock:
-        cidr: 192.168.49.1/32
+        cidr: 172.25.112.1/32
     ports:
     - protocol: TCP
       port: 11434
@@ -172,7 +172,7 @@ spec:
       port: 8000
   - to:
     - ipBlock:
-        cidr: 192.168.49.1/32
+        cidr: 172.25.112.1/32
     ports:
     - protocol: TCP
       port: 11434

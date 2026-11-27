@@ -11,7 +11,7 @@ metadata:
   name: api
   namespace: rahbar
 spec:
-  replicas: 3
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:

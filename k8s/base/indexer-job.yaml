@@ -24,11 +24,12 @@ spec:
         runAsNonRoot: true
         runAsUser: 10001
         runAsGroup: 10001
+        fsGroup: 10001
       containers:
       - name: indexer
         image: rahbar-indexer:dev
         imagePullPolicy: IfNotPresent
-        args: ["python", "-m", "pipeline.run", "--dummy"]
+        args: ["python", "-m", "pipeline.run"]
         envFrom:
         - configMapRef:
             name: rahbar-config
@@ -41,13 +42,20 @@ spec:
         volumeMounts:
         - name: tmp
           mountPath: /tmp
+        - name: datalake
+          mountPath: /corpus
+          subPath: corpus
+          readOnly: true
         resources:
           requests:
             cpu: "100m"
             memory: "256Mi"
           limits:
             cpu: "1"
-            memory: "1Gi"
+            memory: "2Gi"
       volumes:
       - name: tmp
         emptyDir: {}
+      - name: datalake
+        persistentVolumeClaim:
+          claimName: datalake
