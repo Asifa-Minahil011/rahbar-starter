@@ -177,7 +177,8 @@ def test_store_swaps_in_a_new_index_and_records_the_pin() -> None:
     assert first["embed_model"] == settings.embed_model and first["dimension"] == 3
     assert first["index_id"] != second["index_id"]          # the cache key changes per build
     meta = next(iter(client.collections["rahbar"].rows.values()))[2]
-    assert set(meta) == {"source", "section", "page", "doc_version", "superseded"}
+    assert set(meta) == {"source", "section", "page", "doc_version", "superseded", "doc_id",
+                         "content_hash", "status", "pinned", "ingested_at"}
 
 
 def test_store_refuses_mismatched_vectors() -> None:
