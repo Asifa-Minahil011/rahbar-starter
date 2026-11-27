@@ -14,10 +14,11 @@ import json
 import os
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from .config import IndexerSettings, get_settings
-from .models import Chunk
+from .models import Chunk, Document
 
 
 def log(msg: str, **fields: object) -> None:
@@ -63,6 +64,26 @@ def discover(corpus_dir: str) -> list[tuple[Path, str, bool]]:
     return found
 
 
+def _verify_stage(docs: list[Document], paths: dict[str, Path], settings: IndexerSettings,
+                  embed_fn: Callable[[list[str], IndexerSettings], list[list[float]]]) -> list[Document]:
+    """Stage 1b (RAGOps A1): verify the extracted documents, quarantine the failures, write
+    the per-run report, and return only the documents that may be chunked."""
+    from .verify import Thresholds, manifest_problems, quarantine_files, verify_documents, write_report
+
+    t = Thresholds.from_env()
+    reports = verify_documents(docs, t, lambda texts: embed_fn(texts, settings))
+    out_dir = os.environ.get("VERIFY_DIR", settings.verify_dir)
+    jp, mp = write_report(reports, out_dir, t, manifest_problems(settings.corpus_dir))
+    quarantine_files(reports, paths, out_dir)
+    for r in reports:
+        log("verified", source=r.source, decision=r.decision,
+            checks={c.name: c.status for c in r.checks}, reasons=r.reasons)
+    log("verification summary", accepted=sum(r.decision == "accept" for r in reports),
+        quarantined=sum(r.decision == "quarantine" for r in reports), report=str(jp))
+    keep = {r.source for r in reports if r.decision == "accept"}
+    return [d for d in docs if d.source in keep]
+
+
 def run_pipeline(settings: IndexerSettings) -> int:
     from .chunk import chunk
     from .clean import clean
@@ -73,26 +94,36 @@ def run_pipeline(settings: IndexerSettings) -> int:
     documents = discover(settings.corpus_dir)
     if not documents:
         raise SystemExit(f"no documents found in {settings.corpus_dir}")
-    all_chunks: list[Chunk] = []
-    original_words = 0
+    cleaned: list[Document] = []
+    paths: dict[str, Path] = {}
     skipped: list[str] = []
     for path, doc_version, superseded in documents:
         try:
-            doc = clean(extract(str(path), doc_version, superseded))
-            pieces = chunk(doc, settings.chunk_size, settings.chunk_overlap)
+            cleaned.append(clean(extract(str(path), doc_version, superseded)))
+            paths[path.name] = path
         except Exception as exc:   # one bad document must not sink the whole index
             log("document skipped", source=path.name, error=repr(exc))
             skipped.append(path.name)
+    if os.environ.get("VERIFY", "on").lower() != "off":
+        cleaned = _verify_stage(cleaned, paths, settings, embed)
+    all_chunks: list[Chunk] = []
+    original_words = 0
+    for doc in cleaned:
+        try:
+            pieces = chunk(doc, settings.chunk_size, settings.chunk_overlap)
+        except Exception as exc:   # same rule as extraction: one bad document must not sink the index
+            log("document skipped", source=doc.source, error=repr(exc))
+            skipped.append(doc.source)
             continue
         words = sum(len(p.text.split()) for p in doc.pages)
         original_words += words
-        log("chunked", source=path.name, doc_version=doc_version, superseded=superseded,
+        log("chunked", source=doc.source, doc_version=doc.doc_version, superseded=doc.superseded,
             chunks=len(pieces), words=words)
         all_chunks.extend(pieces)
     if not all_chunks:
         raise SystemExit("no chunks produced from any document")
     stored_words = sum(len(c.text.split()) for c in all_chunks)
-    log("chunking summary", documents=len(documents) - len(skipped), skipped=skipped,
+    log("chunking summary", documents=len(cleaned), skipped=skipped,
         chunks=len(all_chunks), original_words=original_words, stored_words=stored_words,
         storage_amplification=round(stored_words / max(original_words, 1), 3),
         chunk_size=settings.chunk_size, chunk_overlap=settings.chunk_overlap)
