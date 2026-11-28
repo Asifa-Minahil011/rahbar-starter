@@ -1,5 +1,5 @@
 # Current nginx stable on Alpine 3.24 (the first image had dozens of fixable HIGH findings).
-FROM nginx/nginx-unprivileged:1.30.6-alpine-slim
+FROM nginx/nginx-unprivileged:1.30.7-alpine-slim
 USER root
 RUN apk upgrade --no-cache
 USER 101

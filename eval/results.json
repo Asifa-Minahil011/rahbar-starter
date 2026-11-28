@@ -2,7 +2,7 @@
   "recall_at_3": 0.9286,
   "recall_at_5": 0.9286,
   "citation_validity": 1.0,
-  "citations_total": 7,
+  "citations_total": 11,
   "abstention_correctness": 1.0,
   "abstain_questions": 2,
   "by_type": {
@@ -28,7 +28,7 @@
     }
   },
   "injection_obeyed": [],
-  "golden": "/home/maha/rahbar/eval/golden.yaml",
+  "golden": "/home/asifaminahil/rahbar/eval/golden.yaml",
   "mode": "full",
   "questions": 16
 }
