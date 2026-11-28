@@ -1,0 +1,127 @@
+{
+ "note": "Fixture sentences written for the module-level embedding test (Part B). paraphrase = same meaning, different words; unrelated = different topics.",
+ "paraphrase": [
+  [
+   "A student must maintain at least 80 percent attendance to sit the final exam.",
+   "To be allowed in the final examination, attendance of eighty percent or more is required."
+  ],
+  [
+   "The rechecking fee is refunded if the marks increase.",
+   "If rechecking raises the student's marks, the fee is returned."
+  ],
+  [
+   "A student may repeat a course to improve the CGPA.",
+   "Courses can be retaken in order to raise the cumulative grade point average."
+  ],
+  [
+   "The summer semester lasts eight weeks.",
+   "The duration of the summer term is 8 weeks."
+  ],
+  [
+   "Students on academic probation must register for repeat courses first.",
+   "A probation student has to enrol in the courses being repeated before any others."
+  ],
+  [
+   "Applications for course withdrawal must be submitted in writing before the deadline.",
+   "A written request to drop a course has to be filed before the cut-off date."
+  ],
+  [
+   "The tuition fee is charged per credit hour.",
+   "Each credit hour carries a tuition charge."
+  ],
+  [
+   "A late fee is charged after the due date.",
+   "A penalty applies when payment is made after the deadline."
+  ],
+  [
+   "Students with a high CGPA receive honors.",
+   "Awards are given to students who achieve a high cumulative GPA."
+  ],
+  [
+   "The final exam carries forty percent of the total marks.",
+   "Forty percent of the course grade comes from the final examination."
+  ],
+  [
+   "A degree requires the completion of 130 credit hours.",
+   "Graduation needs 130 credit hours to be completed."
+  ],
+  [
+   "Relative grading is applied in all courses.",
+   "Every course is graded on a curve relative to the rest of the class."
+  ],
+  [
+   "A regular semester has sixteen weeks of teaching.",
+   "Sixteen teaching weeks make up one regular semester."
+  ],
+  [
+   "Plagiarism is a serious offence and may lead to expulsion.",
+   "Copying another person's work can result in the student being expelled."
+  ],
+  [
+   "Students must carry their ID cards on campus.",
+   "An identity card has to be carried by every student while on campus."
+  ]
+ ],
+ "unrelated": [
+  [
+   "The summer semester lasts eight weeks.",
+   "The cafeteria serves biryani on Fridays."
+  ],
+  [
+   "The rechecking fee is refunded if the marks increase.",
+   "Heavy rain is expected over the northern hills tomorrow."
+  ],
+  [
+   "A student may repeat a course to improve the CGPA.",
+   "The football team scored twice in the last ten minutes."
+  ],
+  [
+   "Attendance must be at least 80 percent.",
+   "Add two cups of flour and stir the batter slowly."
+  ],
+  [
+   "Applications for course withdrawal must be submitted in writing.",
+   "The satellite entered orbit after a flawless launch."
+  ],
+  [
+   "The tuition fee is charged per credit hour.",
+   "Tulips need well drained soil and plenty of sunlight."
+  ],
+  [
+   "A late fee is charged after the due date.",
+   "The violin concerto begins with a quiet melody."
+  ],
+  [
+   "Students with a high CGPA receive honors.",
+   "The train to Lahore departs from platform four at noon."
+  ],
+  [
+   "The final exam carries forty percent of the marks.",
+   "Volcanic ash closed several airports across the region."
+  ],
+  [
+   "Graduation needs 130 credit hours.",
+   "Her grandmother kept chickens behind the old house."
+  ],
+  [
+   "Relative grading is applied in all courses.",
+   "The central bank left interest rates unchanged this quarter."
+  ],
+  [
+   "A regular semester has sixteen weeks of teaching.",
+   "Dolphins communicate with whistles and clicks."
+  ],
+  [
+   "Plagiarism may lead to expulsion.",
+   "The museum opens a new exhibition of bronze sculptures."
+  ],
+  [
+   "Students must carry their ID cards on campus.",
+   "The recipe calls for a pinch of saffron and a bay leaf."
+  ],
+  [
+   "Course registration closes at the end of the first week.",
+   "Marathon runners should hydrate before the race."
+  ]
+ ]
+}

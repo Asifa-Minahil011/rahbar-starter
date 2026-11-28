@@ -35,6 +35,8 @@ class OllamaProvider:
             "format": Answer.model_json_schema(),
             "options": {"temperature": self.settings.temperature},
         }
+        if self.settings.llm_seed is not None:
+            payload["options"]["seed"] = self.settings.llm_seed   # type: ignore[index]
         started = time.perf_counter()
         try:
             r = httpx.post(f"{self.settings.ollama_url.rstrip('/')}/api/chat",

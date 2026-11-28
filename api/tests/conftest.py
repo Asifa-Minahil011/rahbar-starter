@@ -55,6 +55,12 @@ class FakeRedis:
 
 
 @pytest.fixture(autouse=True)
+def no_trace_file(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tests that go through the app must not write traces/traces.jsonl into the repo."""
+    monkeypatch.setenv("TRACE_FILE", "")
+
+
+@pytest.fixture(autouse=True)
 def deps(monkeypatch: pytest.MonkeyPatch) -> Deps:
     d = Deps()
     monkeypatch.setattr(health, "_chroma_client", lambda settings: FakeChroma(d))

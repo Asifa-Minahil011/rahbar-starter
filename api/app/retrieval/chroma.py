@@ -62,11 +62,17 @@ class ChromaRetriever:
         return self.client.get_collection(self.settings.collection)
 
     def retrieve(self, question: str, k: int) -> list[Passage]:
+        return self.retrieve_with_info(question, k)[0]
+
+    def retrieve_with_info(self, question: str, k: int) -> tuple[list[Passage], dict[str, Any]]:
+        """Same as `retrieve`, plus what the trace needs: the filter that was applied, the
+        order before and after the exact-term bonus, and the collection's metadata."""
         vector = self._embed(question)
-        use_filter = self.settings.superseded_filter and not wants_older_version(
-            question, self._old_versions())
+        older = wants_older_version(question, self._old_versions())
+        use_filter = self.settings.superseded_filter and not older
         where = {"superseded": False} if use_filter else None
-        res = self.collection().query(
+        col = self.collection()
+        res = col.query(
             query_embeddings=[vector], n_results=k * CANDIDATES, where=where,
             include=["documents", "metadatas", "distances"],
         )
@@ -84,8 +90,22 @@ class ChromaRetriever:
                 superseded=bool(meta.get("superseded", False)),
             )
             ranked.append((sim + self.settings.hybrid_boost * hit, passage))
+        by_similarity = [p.chunk_id for _, p in sorted(ranked, key=lambda x: x[1].score, reverse=True)][:k]
         ranked.sort(key=lambda pair: pair[0], reverse=True)
-        return [p for _, p in ranked[:k]]
+        top = ranked[:k]
+        meta_c = dict(getattr(col, "metadata", None) or {})
+        info: dict[str, Any] = {
+            "filters": {"where": where, "superseded_filter_enabled": self.settings.superseded_filter,
+                        "older_version_requested": older},
+            "exact_terms": terms, "candidates_fetched": len(ranked),
+            "order_by_similarity": by_similarity,
+            "reranked_order": [p.chunk_id for _, p in top],
+            "final_scores": {p.chunk_id: round(score, 4) for score, p in top},
+            "collection_metadata": {key: meta_c[key] for key in
+                                    ("embed_model", "dimension", "index_id", "chunk_size", "chunk_overlap")
+                                    if key in meta_c},
+        }
+        return [p for _, p in top], info
 
     def _old_versions(self) -> set[str]:
         """doc_version strings of superseded documents, read from the collection and

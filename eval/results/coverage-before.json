@@ -1,0 +1,687 @@
+{
+  "timestamp": "2026-11-26T10:04:18+00:00",
+  "threshold": 0.81,
+  "min_coverage": 0.85,
+  "golden_questions": 27,
+  "live_queries": 42,
+  "coverage": 0.1905,
+  "by_group": {
+    "domain": 0.2333,
+    "ood": 0.0833
+  },
+  "ok": false,
+  "uncovered_topics": [
+    {
+      "topic": "grading / relative / work",
+      "queries": [
+        "how does relative grading work",
+        "what is the grading scale and the grade points"
+      ],
+      "ids": [
+        "L14",
+        "L15"
+      ]
+    },
+    {
+      "topic": "credit / hours / many",
+      "queries": [
+        "how many credit hours do i need to graduate",
+        "how do i apply for my degree after completing the credit hours"
+      ],
+      "ids": [
+        "L17",
+        "L27"
+      ]
+    },
+    {
+      "topic": "avoid / need / probation",
+      "queries": [
+        "what cgpa do i need to avoid academic probation"
+      ],
+      "ids": [
+        "L02"
+      ]
+    },
+    {
+      "topic": "80 / percent / happens",
+      "queries": [
+        "what happens if my attendance is below 80 percent"
+      ],
+      "ids": [
+        "L04"
+      ]
+    },
+    {
+      "topic": "withdraw / deadline",
+      "queries": [
+        "can i withdraw from a course after the deadline"
+      ],
+      "ids": [
+        "L08"
+      ]
+    },
+    {
+      "topic": "clause / say / 4.24",
+      "queries": [
+        "what does clause 4.24 say"
+      ],
+      "ids": [
+        "L09"
+      ]
+    },
+    {
+      "topic": "leave / refund / policy",
+      "queries": [
+        "what is the refund policy if i leave the university"
+      ],
+      "ids": [
+        "L10"
+      ]
+    },
+    {
+      "topic": "semester / freeze",
+      "queries": [
+        "can i freeze a semester"
+      ],
+      "ids": [
+        "L13"
+      ]
+    },
+    {
+      "topic": "grade / passing",
+      "queries": [
+        "what is the passing grade for a course"
+      ],
+      "ids": [
+        "L16"
+      ]
+    },
+    {
+      "topic": "exam / caught / happens",
+      "queries": [
+        "what happens if i am caught cheating in an exam"
+      ],
+      "ids": [
+        "L18"
+      ]
+    },
+    {
+      "topic": "makeup / final / take",
+      "queries": [
+        "can i take a makeup exam if i miss the final"
+      ],
+      "ids": [
+        "L19"
+      ]
+    },
+    {
+      "topic": "repeat / grade / improve",
+      "queries": [
+        "how do i repeat a course to improve my grade"
+      ],
+      "ids": [
+        "L20"
+      ]
+    },
+    {
+      "topic": "semester / credit / minimum",
+      "queries": [
+        "what is the minimum credit load per semester"
+      ],
+      "ids": [
+        "L21"
+      ]
+    },
+    {
+      "topic": "another / transfer / credits",
+      "queries": [
+        "can i transfer credits from another university"
+      ],
+      "ids": [
+        "L22"
+      ]
+    },
+    {
+      "topic": "register / last / date",
+      "queries": [
+        "when is the last date to register for courses"
+      ],
+      "ids": [
+        "L23"
+      ]
+    },
+    {
+      "topic": "fee / late / tuition",
+      "queries": [
+        "what is the late fee for tuition"
+      ],
+      "ids": [
+        "L24"
+      ]
+    },
+    {
+      "topic": "plagiarism / policy",
+      "queries": [
+        "what is the policy on plagiarism"
+      ],
+      "ids": [
+        "L25"
+      ]
+    },
+    {
+      "topic": "finish / long / grade",
+      "queries": [
+        "what is an incomplete grade and how long do i have to finish it"
+      ],
+      "ids": [
+        "L26"
+      ]
+    },
+    {
+      "topic": "dean / requirement / list",
+      "queries": [
+        "what is the dean's list requirement"
+      ],
+      "ids": [
+        "L28"
+      ]
+    },
+    {
+      "topic": "time / allowed / complete",
+      "queries": [
+        "what is the maximum time allowed to complete the degree"
+      ],
+      "ids": [
+        "L29"
+      ]
+    },
+    {
+      "topic": "rules / lab / attendance",
+      "queries": [
+        "what are the attendance rules for lab courses"
+      ],
+      "ids": [
+        "L30"
+      ]
+    },
+    {
+      "topic": "start / hostel / allotment",
+      "queries": [
+        "when does the hostel allotment start"
+      ],
+      "ids": [
+        "L31"
+      ]
+    },
+    {
+      "topic": "bus / leave / time",
+      "queries": [
+        "what time does the university bus leave from Islamabad"
+      ],
+      "ids": [
+        "L32"
+      ]
+    },
+    {
+      "topic": "cricket / join / society",
+      "queries": [
+        "how do i join the cricket society"
+      ],
+      "ids": [
+        "L33"
+      ]
+    },
+    {
+      "topic": "career / year / fair",
+      "queries": [
+        "is there a career fair this year"
+      ],
+      "ids": [
+        "L34"
+      ]
+    },
+    {
+      "topic": "sticker / parking",
+      "queries": [
+        "how do i get a student parking sticker"
+      ],
+      "ids": [
+        "L35"
+      ]
+    },
+    {
+      "topic": "installments / buy / laptop",
+      "queries": [
+        "can i buy a laptop on installments through the university"
+      ],
+      "ids": [
+        "L36"
+      ]
+    },
+    {
+      "topic": "wifi / library / password",
+      "queries": [
+        "what is the wifi password in the library"
+      ],
+      "ids": [
+        "L37"
+      ]
+    },
+    {
+      "topic": "internships / engineering / software",
+      "queries": [
+        "are internships mandatory for BS software engineering"
+      ],
+      "ids": [
+        "L38"
+      ]
+    },
+    {
+      "topic": "abroad / program / exchange",
+      "queries": [
+        "how do i apply for an exchange program abroad"
+      ],
+      "ids": [
+        "L39"
+      ]
+    },
+    {
+      "topic": "head / science / computer",
+      "queries": [
+        "who is the head of the computer science department"
+      ],
+      "ids": [
+        "L41"
+      ]
+    },
+    {
+      "topic": "sports / book / ground",
+      "queries": [
+        "how can i book the sports ground"
+      ],
+      "ids": [
+        "L42"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "id": "L01",
+      "group": "domain",
+      "query": "how many courses can i retake during my degree",
+      "best_golden": "q17",
+      "best_question": "Can a student retake more than two courses during the whole degree?",
+      "similarity": 0.9124,
+      "covered": true
+    },
+    {
+      "id": "L02",
+      "group": "domain",
+      "query": "what cgpa do i need to avoid academic probation",
+      "best_golden": "q05",
+      "best_question": "Which courses must a student on academic warning or probation register for?",
+      "similarity": 0.7295,
+      "covered": false
+    },
+    {
+      "id": "L03",
+      "group": "domain",
+      "query": "do i get my rechecking fee back",
+      "best_golden": "q03",
+      "best_question": "Under what condition is the rechecking fee refunded?",
+      "similarity": 0.8951,
+      "covered": true
+    },
+    {
+      "id": "L04",
+      "group": "domain",
+      "query": "what happens if my attendance is below 80 percent",
+      "best_golden": "q07",
+      "best_question": "What happens to a student who fails to meet the attendance requirements in a course?",
+      "similarity": 0.7678,
+      "covered": false
+    },
+    {
+      "id": "L05",
+      "group": "domain",
+      "query": "what is the tuition fee per credit hour for BS",
+      "best_golden": "q08",
+      "best_question": "What is the tuition fee per credit hour?",
+      "similarity": 0.9176,
+      "covered": true
+    },
+    {
+      "id": "L06",
+      "group": "domain",
+      "query": "how long is the summer semester",
+      "best_golden": "q16",
+      "best_question": "How long is the summer semester?",
+      "similarity": 0.9981,
+      "covered": true
+    },
+    {
+      "id": "L07",
+      "group": "domain",
+      "query": "how many weeks does a normal semester have",
+      "best_golden": "q15",
+      "best_question": "How many weeks of teaching does a regular semester have?",
+      "similarity": 0.91,
+      "covered": true
+    },
+    {
+      "id": "L08",
+      "group": "domain",
+      "query": "can i withdraw from a course after the deadline",
+      "best_golden": "q04",
+      "best_question": "How must a student apply to withdraw from a course?",
+      "similarity": 0.8092,
+      "covered": false
+    },
+    {
+      "id": "L09",
+      "group": "domain",
+      "query": "what does clause 4.24 say",
+      "best_golden": "q11",
+      "best_question": "What does clause 4.24 say about withdrawing from a course?",
+      "similarity": 0.8019,
+      "covered": false
+    },
+    {
+      "id": "L10",
+      "group": "domain",
+      "query": "what is the refund policy if i leave the university",
+      "best_golden": "q09",
+      "best_question": "What is the fee refund policy?",
+      "similarity": 0.7688,
+      "covered": false
+    },
+    {
+      "id": "L11",
+      "group": "domain",
+      "query": "how is cgpa calculated",
+      "best_golden": "q02",
+      "best_question": "How is the CGPA calculated?",
+      "similarity": 0.9948,
+      "covered": true
+    },
+    {
+      "id": "L12",
+      "group": "domain",
+      "query": "what awards do top students get",
+      "best_golden": "q06",
+      "best_question": "What honors or awards do students with a high CGPA receive?",
+      "similarity": 0.8284,
+      "covered": true
+    },
+    {
+      "id": "L13",
+      "group": "domain",
+      "query": "can i freeze a semester",
+      "best_golden": "q15",
+      "best_question": "How many weeks of teaching does a regular semester have?",
+      "similarity": 0.6556,
+      "covered": false
+    },
+    {
+      "id": "L14",
+      "group": "domain",
+      "query": "how does relative grading work",
+      "best_golden": "q02",
+      "best_question": "How is the CGPA calculated?",
+      "similarity": 0.6028,
+      "covered": false
+    },
+    {
+      "id": "L15",
+      "group": "domain",
+      "query": "what is the grading scale and the grade points",
+      "best_golden": "q06",
+      "best_question": "What honors or awards do students with a high CGPA receive?",
+      "similarity": 0.6301,
+      "covered": false
+    },
+    {
+      "id": "L16",
+      "group": "domain",
+      "query": "what is the passing grade for a course",
+      "best_golden": "q01",
+      "best_question": "What is the maximum number of courses a student is allowed to repeat?",
+      "similarity": 0.6727,
+      "covered": false
+    },
+    {
+      "id": "L17",
+      "group": "domain",
+      "query": "how many credit hours do i need to graduate",
+      "best_golden": "q22",
+      "best_question": "How much do I have to pay for each credit hour?",
+      "similarity": 0.7709,
+      "covered": false
+    },
+    {
+      "id": "L18",
+      "group": "domain",
+      "query": "what happens if i am caught cheating in an exam",
+      "best_golden": "q07",
+      "best_question": "What happens to a student who fails to meet the attendance requirements in a course?",
+      "similarity": 0.7093,
+      "covered": false
+    },
+    {
+      "id": "L19",
+      "group": "domain",
+      "query": "can i take a makeup exam if i miss the final",
+      "best_golden": "q07",
+      "best_question": "What happens to a student who fails to meet the attendance requirements in a course?",
+      "similarity": 0.644,
+      "covered": false
+    },
+    {
+      "id": "L20",
+      "group": "domain",
+      "query": "how do i repeat a course to improve my grade",
+      "best_golden": "q17",
+      "best_question": "Can a student retake more than two courses during the whole degree?",
+      "similarity": 0.7416,
+      "covered": false
+    },
+    {
+      "id": "L21",
+      "group": "domain",
+      "query": "what is the minimum credit load per semester",
+      "best_golden": "q08",
+      "best_question": "What is the tuition fee per credit hour?",
+      "similarity": 0.7491,
+      "covered": false
+    },
+    {
+      "id": "L22",
+      "group": "domain",
+      "query": "can i transfer credits from another university",
+      "best_golden": "q17",
+      "best_question": "Can a student retake more than two courses during the whole degree?",
+      "similarity": 0.6817,
+      "covered": false
+    },
+    {
+      "id": "L23",
+      "group": "domain",
+      "query": "when is the last date to register for courses",
+      "best_golden": "q23",
+      "best_question": "What is the procedure to drop a course I have registered for?",
+      "similarity": 0.7219,
+      "covered": false
+    },
+    {
+      "id": "L24",
+      "group": "domain",
+      "query": "what is the late fee for tuition",
+      "best_golden": "q08",
+      "best_question": "What is the tuition fee per credit hour?",
+      "similarity": 0.7168,
+      "covered": false
+    },
+    {
+      "id": "L25",
+      "group": "domain",
+      "query": "what is the policy on plagiarism",
+      "best_golden": "q09",
+      "best_question": "What is the fee refund policy?",
+      "similarity": 0.6299,
+      "covered": false
+    },
+    {
+      "id": "L26",
+      "group": "domain",
+      "query": "what is an incomplete grade and how long do i have to finish it",
+      "best_golden": "q07",
+      "best_question": "What happens to a student who fails to meet the attendance requirements in a course?",
+      "similarity": 0.6556,
+      "covered": false
+    },
+    {
+      "id": "L27",
+      "group": "domain",
+      "query": "how do i apply for my degree after completing the credit hours",
+      "best_golden": "q27",
+      "best_question": "How do I apply for a student visa extension?",
+      "similarity": 0.7015,
+      "covered": false
+    },
+    {
+      "id": "L28",
+      "group": "domain",
+      "query": "what is the dean's list requirement",
+      "best_golden": "q01",
+      "best_question": "What is the maximum number of courses a student is allowed to repeat?",
+      "similarity": 0.6124,
+      "covered": false
+    },
+    {
+      "id": "L29",
+      "group": "domain",
+      "query": "what is the maximum time allowed to complete the degree",
+      "best_golden": "q01",
+      "best_question": "What is the maximum number of courses a student is allowed to repeat?",
+      "similarity": 0.7904,
+      "covered": false
+    },
+    {
+      "id": "L30",
+      "group": "domain",
+      "query": "what are the attendance rules for lab courses",
+      "best_golden": "q07",
+      "best_question": "What happens to a student who fails to meet the attendance requirements in a course?",
+      "similarity": 0.7635,
+      "covered": false
+    },
+    {
+      "id": "L31",
+      "group": "ood",
+      "query": "when does the hostel allotment start",
+      "best_golden": "q12",
+      "best_question": "How do I apply for a hostel room?",
+      "similarity": 0.6849,
+      "covered": false
+    },
+    {
+      "id": "L32",
+      "group": "ood",
+      "query": "what time does the university bus leave from Islamabad",
+      "best_golden": "q24",
+      "best_question": "What is the bus schedule for the university transport service?",
+      "similarity": 0.7555,
+      "covered": false
+    },
+    {
+      "id": "L33",
+      "group": "ood",
+      "query": "how do i join the cricket society",
+      "best_golden": "q12",
+      "best_question": "How do I apply for a hostel room?",
+      "similarity": 0.6222,
+      "covered": false
+    },
+    {
+      "id": "L34",
+      "group": "ood",
+      "query": "is there a career fair this year",
+      "best_golden": "q06",
+      "best_question": "What honors or awards do students with a high CGPA receive?",
+      "similarity": 0.541,
+      "covered": false
+    },
+    {
+      "id": "L35",
+      "group": "ood",
+      "query": "how do i get a student parking sticker",
+      "best_golden": "q27",
+      "best_question": "How do I apply for a student visa extension?",
+      "similarity": 0.6823,
+      "covered": false
+    },
+    {
+      "id": "L36",
+      "group": "ood",
+      "query": "can i buy a laptop on installments through the university",
+      "best_golden": "q01",
+      "best_question": "What is the maximum number of courses a student is allowed to repeat?",
+      "similarity": 0.5857,
+      "covered": false
+    },
+    {
+      "id": "L37",
+      "group": "ood",
+      "query": "what is the wifi password in the library",
+      "best_golden": "q12",
+      "best_question": "How do I apply for a hostel room?",
+      "similarity": 0.5464,
+      "covered": false
+    },
+    {
+      "id": "L38",
+      "group": "ood",
+      "query": "are internships mandatory for BS software engineering",
+      "best_golden": "q05",
+      "best_question": "Which courses must a student on academic warning or probation register for?",
+      "similarity": 0.571,
+      "covered": false
+    },
+    {
+      "id": "L39",
+      "group": "ood",
+      "query": "how do i apply for an exchange program abroad",
+      "best_golden": "q27",
+      "best_question": "How do I apply for a student visa extension?",
+      "similarity": 0.7381,
+      "covered": false
+    },
+    {
+      "id": "L40",
+      "group": "ood",
+      "query": "what are the cafeteria timings",
+      "best_golden": "q26",
+      "best_question": "What are the cafeteria timings and the weekly menu?",
+      "similarity": 0.8852,
+      "covered": true
+    },
+    {
+      "id": "L41",
+      "group": "ood",
+      "query": "who is the head of the computer science department",
+      "best_golden": "q01",
+      "best_question": "What is the maximum number of courses a student is allowed to repeat?",
+      "similarity": 0.5297,
+      "covered": false
+    },
+    {
+      "id": "L42",
+      "group": "ood",
+      "query": "how can i book the sports ground",
+      "best_golden": "q12",
+      "best_question": "How do I apply for a hostel room?",
+      "similarity": 0.6607,
+      "covered": false
+    }
+  ]
+}

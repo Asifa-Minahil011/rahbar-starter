@@ -90,6 +90,17 @@ def run_pipeline(settings: IndexerSettings, force_full: bool = False) -> int:
         raise SystemExit(f"no documents found in {settings.corpus_dir}")
     client = get_client(settings)
 
+    # RAGOps A1: verify new and changed documents before anything is chunked or embedded.
+    from .verify import cached_fns, run_stage
+    outcome = run_stage(entries, extract_fn=extract, clean_fn=clean,
+                        embed_fn=lambda texts: embed(texts, settings),
+                        only=None if force_full else _unverified_sources(settings, client, entries),
+                        corpus_dir=settings.corpus_dir, log=log)
+    entries = outcome.accepted
+    if not entries:
+        raise SystemExit("every document failed verification; see the report in $DATA_DIR/reports")
+    extract, clean = cached_fns(outcome.cache, extract, clean)   # a scan is not OCR'd twice
+
     if not force_full:
         summary = sync(settings, client, entries, extract_fn=extract, clean_fn=clean,
                        chunk_fn=chunk, embed_fn=embed)
@@ -103,6 +114,23 @@ def run_pipeline(settings: IndexerSettings, force_full: bool = False) -> int:
             return int(summary["chunks_total"])
 
     return _full_rebuild(settings, client, entries, extract, clean, chunk, embed, store)
+
+
+def _unverified_sources(settings: IndexerSettings, client: object, entries: list[Entry]) -> set[str] | None:
+    """Sources that are new or changed against the live index (None = verify everything, because
+    there is no usable index to compare with). Unchanged files were verified when they came in."""
+    from .incremental import compatible, make_plan, read_state
+    try:
+        collection = client.get_collection(settings.collection)    # type: ignore[attr-defined]
+        if not compatible(collection, settings):
+            return None
+        state = read_state(collection)
+    except Exception:
+        return None
+    if state is None:
+        return None
+    plan = make_plan(entries, state, {e.source: file_sha256(e.path) for e in entries})
+    return {e.source for e in plan.new + plan.changed}
 
 
 def _full_rebuild(settings: IndexerSettings, client: object, entries: list[Entry],

@@ -44,10 +44,18 @@ class Settings:
     # SUPERSEDED_FILTER=off is the fault-injection switch for FAILURE-ANALYSIS stage E.
     superseded_filter: bool = True
     temperature: float = 0.2
+    llm_seed: int | None = None      # LLM_SEED: fixes sampling so two eval runs can be compared
     llm_model: str = "llama3.2:3b"
     ollama_url: str = "http://host.minikube.internal:11434"
     hosted_base_url: str = ""        # e.g. an OpenAI-compatible endpoint
     llm_api_key: str = field(default="", repr=False)   # from the Secret; never log it
+
+    # RAGOps (Assignment 3). One JSON line per query goes to stdout and, when set, to this file.
+    # The default here is "" so unit tests write nothing; get_settings() defaults to a real path.
+    trace_file: str = ""
+    # INJECTION_RAIL: redact = replace the offending sentence, drop = remove the whole passage
+    # from the prompt, flag = log only, off = nothing
+    injection_rail: str = "redact"
 
     log_level: str = "INFO"
 
@@ -67,9 +75,12 @@ def get_settings() -> Settings:
         hybrid_boost=_float("HYBRID_BOOST", 0.15),
         superseded_filter=os.environ.get("SUPERSEDED_FILTER", "on").lower() != "off",
         temperature=_float("TEMPERATURE", 0.2),
+        llm_seed=int(os.environ["LLM_SEED"]) if os.environ.get("LLM_SEED") else None,
         llm_model=os.environ.get("LLM_MODEL", "llama3.2:3b"),
         ollama_url=os.environ.get("OLLAMA_URL", "http://host.minikube.internal:11434"),
         hosted_base_url=os.environ.get("HOSTED_BASE_URL", ""),
         llm_api_key=os.environ.get("LLM_API_KEY", ""),
+        trace_file=os.environ.get("TRACE_FILE", "traces/traces.jsonl"),
+        injection_rail=os.environ.get("INJECTION_RAIL", "redact").lower(),
         log_level=os.environ.get("LOG_LEVEL", "INFO"),
     )
