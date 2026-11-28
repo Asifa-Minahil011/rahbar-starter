@@ -16,11 +16,27 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s.strip().lower())
 
 
+CLAUSE_NUMBER = re.compile(r"^\d+(\.\d+)*\.?$")
+
+
+def _same_section(cited: str, actual: str) -> bool:
+    """Equal after whitespace/case folding, or `cited` is only the clause number of `actual`
+    ("5.25" for "5.25 Rechecking fee will be refunded if there"). Section headers in this corpus
+    are the first words of a clause, and a 3B model often cites just the number. This is not
+    leniency toward invented sources: the clause must still belong to a passage retrieved for
+    THIS request, from the same document."""
+    c, a = _norm(cited), _norm(actual)
+    if c == a:
+        return True
+    return bool(CLAUSE_NUMBER.match(c)) and a.split(" ", 1)[0].rstrip(".") == c.rstrip(".")
+
+
 def matches_retrieved(citation: Citation, passages: list[Passage]) -> bool:
     """A citation is real only if its source and section equal a passage retrieved for
-    THIS request. Anything else is fabricated."""
+    THIS request (a bare clause number of that passage's section counts). Anything else is
+    fabricated."""
     return any(_norm(citation.source) == _norm(p.source)
-               and _norm(citation.section) == _norm(p.section) for p in passages)
+               and _same_section(citation.section, p.section) for p in passages)
 
 
 def split_citations(citations: list[Citation], passages: list[Passage]
