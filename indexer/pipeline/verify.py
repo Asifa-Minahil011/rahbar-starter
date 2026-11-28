@@ -335,7 +335,9 @@ def verify_entries(entries: list[Any], *, extract_fn: Callable[..., Document], c
     `only` limits the work to new or changed sources; the others are not read at all but still
     count as versions of their doc_id. A file that cannot be extracted is a quality failure in
     the report, not a silent skip."""
-    todo = [e for e in entries if only is None or e.source in only]
+    # When two files are duplicates the first one checked survives. Check the shortest file name first, so
+    # the original (policy-2026.md) wins over its copy (policy-2026-copy.md, -final.md, -reworded.md).
+    todo = sorted((e for e in entries if only is None or e.source in only), key=lambda e: (len(e.source), e.source))
     docs: list[Document] = []
     failed: list[DocReport] = []
     cache: dict[str, Document] = {}

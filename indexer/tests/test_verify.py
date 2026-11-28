@@ -173,3 +173,23 @@ def test_pipeline_does_not_chunk_or_embed_a_quarantined_document(tmp_path: Path,
     by_src = {r["source"]: r for r in json.loads(report.read_text())["reports"]}
     assert by_src["broken.pdf"]["checks"]["quality"]["result"] == "fail"
     assert by_src["good.md"]["action"] == "indexed"
+
+
+def test_the_original_survives_and_the_copy_is_quarantined(tmp_path: Path) -> None:
+    from pipeline.verify import verify_entries
+    from types import SimpleNamespace
+
+    def entry(name: str) -> SimpleNamespace:
+        return SimpleNamespace(path=tmp_path / name, source=name, doc_version="2026-09", superseded=False,
+                               doc_id=name.removesuffix(".md"))
+
+    for n in ("policy-2026.md", "policy-2026-copy.md"):
+        (tmp_path / n).write_text("# Policy\n\n" + GOOD, encoding="utf-8")
+    entries = [entry("policy-2026-copy.md"), entry("policy-2026.md")]   # the copy sorts first alphabetically
+
+    def extract(path: str, version: str, superseded: bool) -> Document:
+        return Document(Path(path).name, version, superseded, [Page(Path(path).name, 1, "# Policy\n\n" + GOOD, False)])
+
+    out = verify_entries(entries, extract_fn=extract, clean_fn=lambda d: d, t=Thresholds(), today=TODAY)
+    action = {r.source: r.action for r in out.reports}
+    assert action == {"policy-2026.md": "indexed", "policy-2026-copy.md": "quarantined"}
