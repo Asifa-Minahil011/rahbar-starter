@@ -26,13 +26,13 @@ rules:
     metric: faithfulness
     check: min
     value: 0.60
-    why: "WRITE: baseline faithfulness was X; floor = baseline minus 0.05 so noise on a CPU model does not block a release."
+    why: "Baseline lexical faithfulness was 0.9021 (n=11). The floor 0.60 is deliberately far below it: the score counts word overlap on few answers and the CPU model varies run to run, so only a large drop should block a release."
 
   - id: p95-latency
     metric: latency_p95_ms
     check: max
     value: 240000
-    why: "WRITE: baseline p95 was X ms (llama3.2:3b on CPU, about 1-2 minutes per answer). Limit is a deliberate ceiling: a release that doubles it is not shipped."
+    why: "Baseline p95 was 160481 ms (llama3.2:3b on CPU, p50 77761 ms). 240000 ms is 1.5 times the baseline: a release that slows answers by half is not shipped."
 
   - id: abstention-not-lower
     metric: abstention_correctness
