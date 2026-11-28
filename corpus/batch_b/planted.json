@@ -1,0 +1,18 @@
+{
+  "_comment": "Ground truth for Batch B: what was planted in each file and what a correct pipeline does with it. The verify stage (A1) is scored against this file; do not edit it to fit the results.",
+  "batch": "B",
+  "files": [
+    {"file": "library-borrowing-policy-2026.md", "planted": "none (clean, new topic)", "expected_check": null, "expected_action": "indexed"},
+    {"file": "scholarship-and-financial-aid-policy-2026.md", "planted": "none (clean, new topic)", "expected_check": null, "expected_action": "indexed"},
+    {"file": "hostel-regulations-2026.md", "planted": "none (clean; it answers the hostel curfew/fee question the golden set expects to abstain on, which is the data-drift effect in E3)", "expected_check": null, "expected_action": "indexed"},
+    {"file": "examination-conduct-rules-2026.md", "planted": "none (clean, new topic)", "expected_check": null, "expected_action": "indexed"},
+    {"file": "library-borrowing-policy-2026-copy.md", "planted": "exact duplicate of library-borrowing-policy-2026.md (same bytes)", "expected_check": "uniqueness", "expected_action": "quarantined"},
+    {"file": "scholarship-and-financial-aid-policy-2026-final.md", "planted": "exact duplicate of scholarship-and-financial-aid-policy-2026.md (same bytes)", "expected_check": "uniqueness", "expected_action": "quarantined"},
+    {"file": "library-borrowing-policy-2026-reworded.md", "planted": "near-duplicate of library-borrowing-policy-2026.md (a few words changed, different bytes, same numbers)", "expected_check": "uniqueness", "expected_action": "quarantined"},
+    {"file": "transport-policy-2026-truncated.md", "planted": "truncated: declares 3 pages, stops in the middle of a sentence", "expected_check": "completeness", "expected_action": "quarantined"},
+    {"file": "attendance-notice-corrupt.pdf", "planted": "corrupt PDF: header, garbage bytes, no cross-reference table", "expected_check": "quality", "expected_action": "quarantined"},
+    {"file": "research-ethics-guidelines.md", "planted": "missing metadata: no title, date, version or page count", "expected_check": "completeness", "expected_action": "quarantined"},
+    {"file": "faculty-entrepreneurship-and-technical-start-ups-policy-2026-revision.md", "planted": "newer version (2026-09, same doc_id) of the 2022-05 PDF already in the corpus", "expected_check": "recency", "expected_action": "indexed; the 2022-05 PDF is archived by the incremental update (A2), not quarantined"},
+    {"file": "library-winter-break-notice-injected.md", "planted": "prompt injection: a line telling the assistant to ignore its instructions", "expected_check": null, "expected_action": "indexed (it passes all four checks); the guardrail must flag it at query time (D4)"}
+  ]
+}
